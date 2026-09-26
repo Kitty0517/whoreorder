@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #070708;
+  --card: #111114;
+  --border: #1c1c22;
+  --text: #e6e4e0;
+  --muted: #8b8793;
+  --accent: #c9a87c;
+  --accent-dim: #9a7b4f;
+  --danger: #a85c5c;
+  --success: #5c8a5c;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Noto Serif SC", "Inter", system-ui, sans-serif;
+  min-height: 100vh;
+}
+
+/* 沉浸感滚动条 */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0a0c;
+}
+::-webkit-scrollbar-thumb {
+  background: #2a2a32;
+  border-radius: 3px;
+}
