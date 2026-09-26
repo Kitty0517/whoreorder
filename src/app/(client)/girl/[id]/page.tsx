@@ -25,6 +25,10 @@ export default async function GirlDetailPage({
       avatarEmoji: girlProfiles.avatarEmoji,
       totalOrders: girlProfiles.totalOrders,
       avgRating: girlProfiles.avgRating,
+      tonightPersona: girlProfiles.tonightPersona,
+      tonightBody: girlProfiles.tonightBody,
+      tonightAllowed: girlProfiles.tonightAllowed,
+      tonightOpening: girlProfiles.tonightOpening,
     })
     .from(girlProfiles)
     .innerJoin(users, eq(girlProfiles.userId, users.id))
@@ -73,6 +77,16 @@ export default async function GirlDetailPage({
             <p className="text-sm text-[#c9a87c] mt-3">{girl.price} / 次服务</p>
           </div>
         </div>
+
+        {(girl.tonightPersona || girl.tonightOpening) && (
+          <section className="bg-[#0f0a0a] border border-[#3a2222] rounded-xl p-6 space-y-2">
+            <p className="text-xs text-[#c9a87c]">她今晚的牌</p>
+            {girl.tonightPersona && <p className="text-sm">身份：{girl.tonightPersona}</p>}
+            {girl.tonightBody && <p className="text-sm">身体：{girl.tonightBody}</p>}
+            {girl.tonightAllowed && <p className="text-sm">可被：{girl.tonightAllowed}</p>}
+            {girl.tonightOpening && <p className="text-sm text-[#c9a87c] pt-1">「{girl.tonightOpening}」</p>}
+          </section>
+        )}
 
         {canOrder ? (
           <section className="bg-[#0f0a0a] border border-[#3a2222] rounded-xl p-6">

@@ -8,6 +8,7 @@ export function OrderForm({ girlId }: { girlId: string }) {
   const [fantasyType, setFantasyType] = useState("情景代入");
   const [tone, setTone] = useState("submissive");
   const [detail, setDetail] = useState("");
+  const [scene, setScene] = useState("雨夜酒店");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -22,7 +23,7 @@ export function OrderForm({ girlId }: { girlId: string }) {
     const res = await fetch("/api/orders/create", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ girlId, fantasyType, tone, fantasyDetail: detail }),
+      body: JSON.stringify({ girlId, fantasyType, tone, fantasyDetail: detail, scene }),
     });
     const data = await res.json();
     if (!res.ok) {
@@ -35,6 +36,20 @@ export function OrderForm({ girlId }: { girlId: string }) {
 
   return (
     <form onSubmit={submit} className="space-y-4">
+      <div>
+        <label className="block text-xs text-[#8b8793] mb-1.5">今晚把她放在哪</label>
+        <select
+          value={scene}
+          onChange={(e) => setScene(e.target.value)}
+          className="w-full bg-[#0a0a0c] border border-[#1c1c22] rounded-md px-3 py-2.5 text-sm focus:outline-none focus:border-[#c9a87c]/50"
+        >
+          <option>雨夜酒店</option>
+          <option>车后座</option>
+          <option>客人家里的浴室</option>
+          <option>楼道</option>
+          <option>她自己的房间</option>
+        </select>
+      </div>
       <div>
         <label className="block text-xs text-[#8b8793] mb-1.5">幻想类型</label>
         <select
