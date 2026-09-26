@@ -122,6 +122,8 @@ export default async function GirlOrderPage({
               extraStatus={order.extraStatus || "none"}
               unlockedDepth={order.unlockedDepth || "look"}
               roomEndsAt={order.roomEndsAt}
+              playTags={(() => { try { return JSON.parse(order.playTags || "[]"); } catch { return []; } })()}
+              specialTags={(() => { try { return JSON.parse(order.specialTags || "[]"); } catch { return []; } })()}
             />
           </section>
         ) : (

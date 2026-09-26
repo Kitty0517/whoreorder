@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { OrderForm } from "@/components/OrderForm";
 import { WishButton } from "@/components/WishButton";
+import { FloorWatch } from "@/components/FloorWatch";
 import { parseMenu, PARTS } from "@/lib/bodyMenu";
 
 export default async function GirlDetailPage({
@@ -66,10 +67,12 @@ export default async function GirlDetailPage({
   const canOrder = girl.status === "idle";
 
   return (
+    <>
+    <FloorWatch girlIds={[id]} />
     <div className="min-h-screen">
       <header className="border-b border-[#1c1c22] px-6 py-4">
-        <Link href="/browse" className="text-xs text-[#8b8793] hover:text-[#c9a87c]">
-          ← 返回列表
+        <Link href="/floor" className="text-xs text-[#8b8793] hover:text-[#c9a87c]">
+          ← 回楼面
         </Link>
       </header>
 
@@ -156,5 +159,6 @@ export default async function GirlDetailPage({
         )}
       </main>
     </div>
+    </>
   );
 }

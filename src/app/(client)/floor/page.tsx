@@ -5,6 +5,7 @@ import { eq, inArray } from "drizzle-orm";
 import Link from "next/link";
 import { LogoutButton } from "@/components/LogoutButton";
 import { parseMenu, PARTS } from "@/lib/bodyMenu";
+import { FloorWatch } from "@/components/FloorWatch";
 
 export default async function FloorPage() {
   const user = await requireUser("client");
@@ -19,6 +20,7 @@ export default async function FloorPage() {
       bodyMenu: girlProfiles.bodyMenu,
       tonightOpening: girlProfiles.tonightOpening,
       viewCount: girlProfiles.viewCount,
+      watchers: girlProfiles.watchers,
     })
     .from(girlProfiles)
     .innerJoin(users, eq(girlProfiles.userId, users.id));
@@ -29,6 +31,15 @@ export default async function FloorPage() {
     .where(inArray(orders.status, ["pending", "accepted", "serving"]));
   const busySet = new Set(busyRooms.map((b) => b.girlId));
   const onFloor = girls.filter((g) => g.status === "idle" || g.status === "busy");
+  const now = Math.floor(Date.now() / 1000);
+  function watchingNow(raw?: string | null) {
+    try {
+      const arr = JSON.parse(raw || "[]");
+      if (!Array.isArray(arr)) return 0;
+      return arr.filter((w: any) => w && w.until > now).length;
+    } catch { return 0; }
+  }
+  const floorIds = onFloor.map((g) => g.id);
 
   return (
     <div className="min-h-screen">
@@ -44,6 +55,7 @@ export default async function FloorPage() {
         </div>
       </header>
       <main className="max-w-3xl mx-auto px-6 py-10 space-y-4">
+        <FloorWatch girlIds={floorIds} />
         <p className="text-xs text-[#5a5860]">进门指人指处指档。房里有人就等。</p>
         {onFloor.length === 0 ? (
           <p className="text-[#5a5860] text-sm">柜上没人。</p>
@@ -68,7 +80,7 @@ export default async function FloorPage() {
                     <div>
                       <p className="text-[#e6e4e0] font-medium">{g.displayName}</p>
                       <p className="text-xs text-[#8b8793] mt-1">
-                        {inRoom ? "房里有人" : "空着可叫"} · {g.price} 币起 · {g.viewCount || 0} 人翻过
+                        {inRoom ? "房里有人" : "空着可叫"} · {g.price} 币起 · {watchingNow(g.watchers) ? watchingNow(g.watchers) + " 人正在看" : (g.viewCount || 0) + " 人翻过"}
                       </p>
                       <p className="text-sm text-[#c9a87c] mt-2">
                         卖：{selling.length ? selling.join("、") : "还没摆货"}

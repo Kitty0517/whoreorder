@@ -33,6 +33,7 @@ export const girlProfiles = sqliteTable("girl_profiles", {
   tonightContract: text("tonight_contract").notNull().default("obey"),
   clockOutNote: text("clock_out_note").notNull().default(""),
   bodyMenu: text("body_menu").notNull().default("{}"),
+  watchers: text("watchers").notNull().default("[]"),
   createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(unixepoch())`).notNull(),
 });
 

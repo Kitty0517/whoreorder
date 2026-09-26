@@ -8,6 +8,15 @@ import { LogoutButton } from "@/components/LogoutButton";
 import { callText, DEPTH_LABEL, PART_LABEL, formatClock, roomLeftSeconds } from "@/lib/house";
 import { parseMenu, PARTS } from "@/lib/bodyMenu";
 
+function watchingNow(raw?: string | null) {
+  try {
+    const now = Math.floor(Date.now() / 1000);
+    const arr = JSON.parse(raw || "[]");
+    if (!Array.isArray(arr)) return 0;
+    return arr.filter((w: any) => w && w.until > now).length;
+  } catch { return 0; }
+}
+
 export default async function GirlDashboard() {
   const user = await requireUser("girl");
   const [profile] = await db.select().from(girlProfiles).where(eq(girlProfiles.userId, user.id)).limit(1);
@@ -62,7 +71,11 @@ export default async function GirlDashboard() {
           </div>
           <StatusSwitcher current={profile?.status || "off"} />
           <p className="text-xs text-[#8b8793] mt-3">今晚卖：{selling.length ? selling.join("、") : "还没摆货"}</p>
-          <p className="text-xs text-[#5a5860] mt-1">{profile?.viewCount || 0} 人翻过你</p>
+          <p className="text-xs text-[#c9a87c] mt-1">
+              {watchingNow((profile as any)?.watchers)
+                ? `${watchingNow((profile as any)?.watchers)} 人正在看你`
+                : `${profile?.viewCount || 0} 人翻过你`}
+            </p>
         </section>
 
         <section>
