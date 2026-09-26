@@ -3,11 +3,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { PARTS, emptyPart, type PartState, type DepthChoice } from "@/lib/bodyMenu";
+import { PARTS, PLAY_TAGS, SPECIAL_KINKS, emptyPart, emptySpecial, type PartState, type DepthChoice, type SpecialState } from "@/lib/bodyMenu";
 
 export default function BodyArchivePage() {
   const router = useRouter();
-  const [menu, setMenu] = useState<Record<string, PartState>>({});
+  const [menu, setMenu] = useState<Record<string, any>>({});
+  const [special, setSpecial] = useState<SpecialState>(emptySpecial());
   const [cur, setCur] = useState("mouth");
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
@@ -17,8 +18,12 @@ export default function BodyArchivePage() {
       .then((r) => r.json())
       .then((d) => {
         const m = d.menu || {};
-        for (const p of PARTS) if (!m[p.key]) m[p.key] = emptyPart();
+        for (const p of PARTS) {
+          if (!m[p.key]) m[p.key] = emptyPart();
+          if (!m[p.key].playTags) m[p.key].playTags = [];
+        }
         setMenu(m);
+        setSpecial(m._special || emptySpecial());
       });
   }, []);
 
@@ -32,7 +37,7 @@ export default function BodyArchivePage() {
     const res = await fetch("/api/girls/body", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ menu }),
+      body: JSON.stringify({ menu: { ...menu, _special: special } }),
     });
     const data = await res.json();
     setLoading(false);
@@ -176,6 +181,30 @@ export default function BodyArchivePage() {
                 </div>
               </div>
 
+              <div>
+                <p className="text-xs text-[#c9a87c] mb-2">这一处开放的玩法（可多选）</p>
+                <div className="flex flex-wrap gap-2">
+                  {PLAY_TAGS.map((tag) => {
+                    const on = (part.playTags || []).includes(tag.key);
+                    return (
+                      <button
+                        key={tag.key}
+                        type="button"
+                        onClick={() => {
+                          const cur = part.playTags || [];
+                          const next = on ? cur.filter((x: string) => x !== tag.key) : [...cur, tag.key];
+                          patch(cur, { ...part, playTags: next });
+                        }}
+                        className={`text-xs px-2 py-1 rounded border ${
+                          on ? "border-[#c9a87c] text-[#c9a87c]" : "border-[#2a2a32] text-[#5a5860]"
+                        }`}
+                      >
+                        {tag.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
               {(part.scoreLook > 0 || part.enabled) && (
                 <p className="text-xs text-[#8b8793]">
                   估价会在保存后出：耐看 / 好用 / 好骂。
@@ -193,6 +222,28 @@ export default function BodyArchivePage() {
             </p>
           ))}
         </div>
+
+        
+        <section className="bg-[#111114] border border-[#1c1c22] rounded-xl p-5 space-y-3">
+          <h2 className="text-sm text-[#c9a87c]">特殊癖好（整店，默认关）</h2>
+          <p className="text-xs text-[#5a5860] leading-relaxed">
+            点亮后客人才看得到。跨物种是非人/魔物幻想，不是真实动物。多人是文字里被多于一人使用。
+          </p>
+          {SPECIAL_KINKS.map((k) => (
+            <label key={k.key} className="flex gap-3 items-start text-sm border border-[#1c1c22] rounded-md p-3">
+              <input
+                type="checkbox"
+                checked={!!special[k.key]}
+                onChange={(e) => setSpecial((s) => ({ ...s, [k.key]: e.target.checked }))}
+                className="mt-1"
+              />
+              <span>
+                <span className="text-[#e6e4e0]">{k.label}</span>
+                <span className="block text-xs text-[#5a5860] mt-1">{k.hint}</span>
+              </span>
+            </label>
+          ))}
+        </section>
 
         {msg && <p className="text-xs text-[#c9a87c]">{msg}</p>}
         <button

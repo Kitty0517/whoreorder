@@ -66,6 +66,54 @@ export const PARTS = [
   },
 ] as const;
 
+/** 常用玩法标签：挂在每一处主货下，默认关 */
+export const PLAY_TAGS = [
+  { key: "watch_only", label: "只准看" },
+  { key: "self_open", label: "自己扒开" },
+  { key: "count", label: "报数" },
+  { key: "silent", label: "不许出声" },
+  { key: "must_sound", label: "必须出声" },
+  { key: "resist_then", label: "先拒后软" },
+  { key: "cold_face", label: "表面冷淡" },
+  { key: "marks", label: "留印" },
+  { key: "edge", label: "边缘" },
+  { key: "objectify", label: "物化称呼" },
+  { key: "kneel", label: "跪着完成" },
+  { key: "show_after", label: "用后展示" },
+] as const;
+
+/**
+ * 特殊癖好：整店级，二次确认才开。
+ * 跨物种 = 非人/魔物/兽人等幻想形态，不是真实动物。
+ */
+export const SPECIAL_KINKS = [
+  {
+    key: "multi",
+    label: "多人",
+    hint: "同一房里被多于一人使用、排队、被看着被用。纯文字幻想。",
+  },
+  {
+    key: "nonhuman",
+    label: "跨物种·非人",
+    hint: "魔物、兽人、触手、非人形态等幻想。不是真实动物。",
+  },
+  {
+    key: "tentacle",
+    label: "触手",
+    hint: "被缠、被填、被固定。可与非人叠加。",
+  },
+  {
+    key: "public_play",
+    label: "半公开",
+    hint: "有人可能看见、柜上知道你在被用。仍在店内文字。",
+  },
+  {
+    key: "harsh_object",
+    label: "重物化",
+    hint: "更短的指令、更少的人话、当器具用。",
+  },
+] as const;
+
 export type PartKey = (typeof PARTS)[number]["key"];
 
 export type DepthChoice = "deny" | "allow" | "markup";
@@ -76,10 +124,13 @@ export type PartState = {
   depths: Record<string, DepthChoice>;
   namesFree: string[];
   namesPaid: string[];
+  playTags: string[];
   scoreLook: number;
   scoreUse: number;
   scoreFilth: number;
 };
+
+export type SpecialState = Record<string, boolean>;
 
 export function emptyPart(): PartState {
   return {
@@ -88,10 +139,17 @@ export function emptyPart(): PartState {
     depths: { look: "deny", use: "deny", enter: "deny", dirty: "deny" },
     namesFree: [],
     namesPaid: [],
+    playTags: [],
     scoreLook: 0,
     scoreUse: 0,
     scoreFilth: 0,
   };
+}
+
+export function emptySpecial(): SpecialState {
+  const s: SpecialState = {};
+  for (const k of SPECIAL_KINKS) s[k.key] = false;
+  return s;
 }
 
 export function scorePart(part: PartState): PartState {
@@ -99,6 +157,7 @@ export function scorePart(part: PartState): PartState {
   const allow = Object.values(part.depths).filter((v) => v === "allow").length;
   const markup = Object.values(part.depths).filter((v) => v === "markup").length;
   const names = part.namesFree.length + part.namesPaid.length;
+  const tags = part.playTags?.length || 0;
   if (!part.enabled) {
     return { ...part, scoreLook: 0, scoreUse: 0, scoreFilth: 0 };
   }
@@ -106,18 +165,36 @@ export function scorePart(part: PartState): PartState {
     ...part,
     scoreLook: Math.min(10, 4 + photos * 2 + (part.enabled ? 1 : 0)),
     scoreUse: Math.min(10, 3 + allow * 2 + markup),
-    scoreFilth: Math.min(10, 3 + names + markup + (allow > 1 ? 2 : 0)),
+    scoreFilth: Math.min(10, 3 + names + markup + tags + (allow > 1 ? 1 : 0)),
   };
 }
 
 export function parseMenu(raw?: string | null) {
   try {
-    return JSON.parse(raw || "{}") as Record<string, PartState>;
+    const data = JSON.parse(raw || "{}") as Record<string, any>;
+    return data;
   } catch {
     return {};
   }
 }
 
+export function getSpecial(menu: Record<string, any>): SpecialState {
+  const base = emptySpecial();
+  const raw = menu._special || {};
+  for (const k of Object.keys(base)) {
+    base[k] = !!raw[k];
+  }
+  return base;
+}
+
 export function openParts(menu: Record<string, PartState>) {
   return PARTS.filter((p) => menu[p.key]?.enabled);
+}
+
+export function playTagLabel(key: string) {
+  return PLAY_TAGS.find((t) => t.key === key)?.label || key;
+}
+
+export function specialLabel(key: string) {
+  return SPECIAL_KINKS.find((t) => t.key === key)?.label || key;
 }

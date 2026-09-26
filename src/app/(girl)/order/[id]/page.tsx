@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { ReplyForm } from "@/components/ReplyForm";
 import Link from "next/link";
 import { callText, DEPTH_LABEL, formatClock, roomLeftSeconds } from "@/lib/house";
+import { playTagLabel, specialLabel } from "@/lib/bodyMenu";
 
 export default async function GirlOrderPage({
   params,
@@ -37,6 +38,8 @@ export default async function GirlOrderPage({
       unlockedDepth: orders.unlockedDepth,
       roomEndsAt: orders.roomEndsAt,
       callNo: orders.callNo,
+      playTags: orders.playTags,
+      specialTags: orders.specialTags,
       createdAt: orders.createdAt,
       clientName: users.displayName,
     })
@@ -77,6 +80,18 @@ export default async function GirlOrderPage({
           <h1 className="text-xl text-[#c9a87c]">{order.clientName}</h1>
           <p className="text-sm text-[#e6e4e0] mt-3 leading-relaxed">「{hook}」</p>
           {order.part ? <p className="text-xs text-[#c9a87c] mt-2">他买的是你的{order.partName || order.part} · {order.depth}</p> : null}
+          {(() => {
+            let tags: string[] = [];
+            let specials: string[] = [];
+            try { tags = JSON.parse(order.playTags || "[]"); } catch {}
+            try { specials = JSON.parse(order.specialTags || "[]"); } catch {}
+            if (!tags.length && !specials.length) return null;
+            return (
+              <p className="text-xs text-[#8b8793] mt-1">
+                玩法：{[...tags.map(playTagLabel), ...specials.map(specialLabel)].join("、")}
+              </p>
+            );
+          })()}
           <p className="text-xs text-[#5a5860] mt-2">
             {new Date(order.createdAt).toLocaleString("zh-CN")}
             {order.scene ? ` · ${order.scene}` : ""} · {toneMap[order.tone] || order.tone}

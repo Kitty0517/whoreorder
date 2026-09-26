@@ -10,7 +10,7 @@ import { prevDepth } from "@/lib/house";
 export async function POST(req: NextRequest) {
   try {
     const user = await requireUser("client");
-    const { girlId, fantasyType, tone, fantasyDetail, scene, bodyAnchor, contract, part, depth, partName, minutes } = await req.json();
+    const { girlId, fantasyType, tone, fantasyDetail, scene, bodyAnchor, contract, part, depth, partName, minutes, playTags, specialTags } = await req.json();
 
     if (!girlId || !part || !depth) {
       return NextResponse.json({ error: "先指人、指处、指档" }, { status: 400 });
@@ -95,6 +95,8 @@ export async function POST(req: NextRequest) {
       part: part || "",
       depth: depth || "",
       partName: partName || "",
+      playTags: JSON.stringify(Array.isArray(playTags) ? playTags.slice(0, 3) : []),
+      specialTags: JSON.stringify(Array.isArray(specialTags) ? specialTags : []),
       extraPay,
       extraDemand,
       extraStatus,

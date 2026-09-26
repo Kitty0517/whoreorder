@@ -49,6 +49,8 @@ export const orders = sqliteTable("orders", {
   part: text("part").notNull().default(""),
   depth: text("depth").notNull().default(""),
   partName: text("part_name").notNull().default(""),
+  playTags: text("play_tags").notNull().default("[]"),
+  specialTags: text("special_tags").notNull().default("[]"),
   extraPay: integer("extra_pay").notNull().default(0),
   extraDemand: text("extra_demand").notNull().default(""),
   extraStatus: text("extra_status").notNull().default("none"),
