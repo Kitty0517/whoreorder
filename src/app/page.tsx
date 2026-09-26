@@ -6,7 +6,7 @@ export default async function Home() {
   const user = await getCurrentUser();
   if (user) {
     if (user.role === "girl") redirect("/dashboard");
-    else redirect("/browse");
+    else redirect("/floor");
   }
 
   return (

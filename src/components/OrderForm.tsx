@@ -13,6 +13,7 @@ export function OrderForm({ girlId }: { girlId: string }) {
   const [tone, setTone] = useState("submissive");
   const [detail, setDetail] = useState("");
   const [scene, setScene] = useState("雨夜酒店");
+  const [minutes, setMinutes] = useState(20);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -44,7 +45,7 @@ export function OrderForm({ girlId }: { girlId: string }) {
       return;
     }
     if (!detail.trim() || detail.length < 20) {
-      setError("在她允许的范围内，把过程写具体。");
+      setError("进房第一句指令，写具体。");
       return;
     }
     setLoading(true);
@@ -61,6 +62,7 @@ export function OrderForm({ girlId }: { girlId: string }) {
         part,
         depth,
         partName,
+        minutes,
         bodyAnchor: current?.label || part,
         contract: current?.depths?.[depth] === "markup" ? "markup" : "obey",
       }),
@@ -112,6 +114,15 @@ export function OrderForm({ girlId }: { girlId: string }) {
         </div>
       )}
       <div>
+        <label className="block text-xs text-[#8b8793] mb-1.5">这钟多久</label>
+        <select value={minutes} onChange={(e) => setMinutes(Number(e.target.value))}
+          className="w-full bg-[#0a0a0c] border border-[#1c1c22] rounded-md px-3 py-2.5 text-sm">
+          <option value={20}>20 分钟</option>
+          <option value={40}>40 分钟（+50币）</option>
+          <option value={60}>60 分钟（+100币）</option>
+        </select>
+      </div>
+      <div>
         <label className="block text-xs text-[#8b8793] mb-1.5">放在哪</label>
         <select value={scene} onChange={(e) => setScene(e.target.value)}
           className="w-full bg-[#0a0a0c] border border-[#1c1c22] rounded-md px-3 py-2.5 text-sm">
@@ -132,7 +143,7 @@ export function OrderForm({ girlId }: { girlId: string }) {
       <input type="hidden" value={tone} />
       {error && <p className="text-[#a85c5c] text-sm">{error}</p>}
       <button type="submit" disabled={loading} className="w-full py-3 bg-[#c9a87c] text-[#070708] font-medium rounded-md disabled:opacity-50">
-        {loading ? "在点…" : "按这处点她"}
+        {loading ? "在点…" : "叫她进房"}
       </button>
     </form>
   );

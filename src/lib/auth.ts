@@ -47,7 +47,7 @@ export async function requireUser(role?: "client" | "girl") {
   if (!user) redirect("/login");
   if (role && user.role !== role) {
     if (user.role === "girl") redirect("/dashboard");
-    else redirect("/browse");
+    else redirect("/floor");
   }
   return user;
 }

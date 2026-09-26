@@ -5,6 +5,7 @@ import { eq, and } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { ReplyForm } from "@/components/ReplyForm";
 import Link from "next/link";
+import { callText, DEPTH_LABEL, formatClock, roomLeftSeconds } from "@/lib/house";
 
 export default async function GirlOrderPage({
   params,
@@ -33,6 +34,9 @@ export default async function GirlOrderPage({
       part: orders.part,
       depth: orders.depth,
       partName: orders.partName,
+      unlockedDepth: orders.unlockedDepth,
+      roomEndsAt: orders.roomEndsAt,
+      callNo: orders.callNo,
       createdAt: orders.createdAt,
       clientName: users.displayName,
     })
@@ -63,7 +67,13 @@ export default async function GirlOrderPage({
 
       <main className="max-w-2xl mx-auto px-6 py-10 space-y-8">
         <div>
-          <p className="text-xs text-[#a85c5c] mb-2">有人点了你</p>
+          <p className="text-xs text-[#a85c5c] mb-2">
+            {order.callNo ? `${order.callNo} 号 · ` : ""}
+            {callText(order.part, order.depth, order.partName || undefined)}
+          </p>
+          <p className="text-xs text-[#8b8793] mb-2">
+            钟 {formatClock(roomLeftSeconds(order.roomEndsAt))} · 已开到：{DEPTH_LABEL[order.unlockedDepth || ""] || order.unlockedDepth || "—"}
+          </p>
           <h1 className="text-xl text-[#c9a87c]">{order.clientName}</h1>
           <p className="text-sm text-[#e6e4e0] mt-3 leading-relaxed">「{hook}」</p>
           {order.part ? <p className="text-xs text-[#c9a87c] mt-2">他买的是你的{order.partName || order.part} · {order.depth}</p> : null}

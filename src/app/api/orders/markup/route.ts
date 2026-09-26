@@ -32,7 +32,11 @@ export async function POST(req: NextRequest) {
       await db.update(users).set({ coins: user.coins + order.extraPay }).where(eq(users.id, user.id));
       await db.insert(walletTxns).values({ id: uuidv4(), userId: client.id, amount: -order.extraPay, reason: "加码付给她" });
       await db.insert(walletTxns).values({ id: uuidv4(), userId: user.id, amount: order.extraPay, reason: "收了加码" });
-      await db.update(orders).set({ extraStatus: "accepted", updatedAt: new Date() }).where(eq(orders.id, orderId));
+      await db.update(orders).set({
+        extraStatus: "accepted",
+        unlockedDepth: order.depth || order.unlockedDepth,
+        updatedAt: new Date(),
+      }).where(eq(orders.id, orderId));
     } else if (decision === "reject") {
       await db.update(orders).set({ extraStatus: "rejected", updatedAt: new Date() }).where(eq(orders.id, orderId));
     } else if (decision === "clarify") {

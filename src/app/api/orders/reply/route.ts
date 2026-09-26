@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { orders, girlProfiles, serviceLogs, users } from "@/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
+import { PART_LABEL, DEPTH_LABEL } from "@/lib/house";
 
 function combineReply(opening: string, during: string, ending: string) {
   return [opening && `【开场】\n${opening}`, during && `【被用】\n${during}`, ending && `【收场】\n${ending}`]
@@ -18,7 +19,7 @@ export async function POST(req: NextRequest) {
     if (!orderId) return NextResponse.json({ error: "客人还在门口" }, { status: 400 });
 
     const [order] = await db.select().from(orders).where(and(eq(orders.id, orderId), eq(orders.girlId, user.id))).limit(1);
-    if (!order) return NextResponse.json({ error: "这单已经不在了" }, { status: 404 });
+    if (!order) return NextResponse.json({ error: "这间房没了" }, { status: 404 });
 
     const replyOpening = opening ?? order.replyOpening ?? "";
     const replyDuring = during ?? order.replyDuring ?? "";
@@ -26,7 +27,7 @@ export async function POST(req: NextRequest) {
     const after = aftercare ?? order.aftercare ?? "";
 
     if (action === "complete" && (!replyOpening.trim() || !replyDuring.trim() || !replyEnding.trim())) {
-      return NextResponse.json({ error: "开场、被用、收场都要写完才能完事" }, { status: 400 });
+      return NextResponse.json({ error: "开场、被用、收场都要写完才能送客" }, { status: 400 });
     }
 
     const patch: any = {
@@ -55,15 +56,24 @@ export async function POST(req: NextRequest) {
 
     await db.update(orders).set(patch).where(eq(orders.id, orderId));
 
+    if (action === "accept" || send === "opening") {
+      await db.update(girlProfiles).set({ status: "busy" }).where(eq(girlProfiles.userId, user.id));
+    }
+
     if (action === "complete") {
-      await db.update(girlProfiles).set({ totalOrders: sql`${girlProfiles.totalOrders} + 1` }).where(eq(girlProfiles.userId, user.id));
+      await db.update(girlProfiles).set({
+        totalOrders: sql`${girlProfiles.totalOrders} + 1`,
+        status: "idle",
+      }).where(eq(girlProfiles.userId, user.id));
       const [client] = await db.select().from(users).where(eq(users.id, order.clientId)).limit(1);
+      const part = order.partName || PART_LABEL[order.part] || order.part;
+      const depth = DEPTH_LABEL[order.unlockedDepth || order.depth] || order.depth;
       await db.insert(serviceLogs).values({
         id: uuidv4(),
         girlId: user.id,
         orderId,
         clientName: client?.displayName || "客人",
-        summary: `客人「${client?.displayName || "匿名"}」点了你。${order.extraPay ? `加码 ${order.extraPay}。` : ""}${after ? "你留下了余韵。" : ""}`,
+        summary: `${client?.displayName || "客人"}叫了你的${part}，开到${depth}。${order.extraStatus === "accepted" ? "加过档。" : ""}${after ? "你留了余韵。" : ""}`,
       });
     }
 

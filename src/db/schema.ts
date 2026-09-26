@@ -61,6 +61,10 @@ export const orders = sqliteTable("orders", {
   sentOpening: integer("sent_opening").notNull().default(0),
   sentDuring: integer("sent_during").notNull().default(0),
   sentEnding: integer("sent_ending").notNull().default(0),
+  unlockedDepth: text("unlocked_depth").notNull().default(""),
+  roomMinutes: integer("room_minutes").notNull().default(20),
+  roomEndsAt: integer("room_ends_at"),
+  callNo: integer("call_no").notNull().default(0),
   createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(unixepoch())`).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).default(sql`(unixepoch())`).notNull(),
 });
