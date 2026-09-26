@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { OrderForm } from "@/components/OrderForm";
 import { WishButton } from "@/components/WishButton";
+import { parseMenu, PARTS } from "@/lib/bodyMenu";
 
 export default async function GirlDetailPage({
   params,
@@ -36,6 +37,7 @@ export default async function GirlDetailPage({
       liveOn: girlProfiles.liveOn,
       viewCount: girlProfiles.viewCount,
       showPublicReviews: girlProfiles.showPublicReviews,
+      bodyMenu: girlProfiles.bodyMenu,
     })
     .from(girlProfiles)
     .innerJoin(users, eq(girlProfiles.userId, users.id))
@@ -106,6 +108,24 @@ export default async function GirlDetailPage({
             {girl.tonightOpening && <p className="text-sm text-[#c9a87c] pt-1">「{girl.tonightOpening}」</p>}
           </section>
         )}
+
+        
+        {(() => {
+          const menu = parseMenu(girl.bodyMenu);
+          const open = PARTS.filter((p) => menu[p.key]?.enabled);
+          if (!open.length) return null;
+          return (
+            <section className="bg-[#0f0a0a] border border-[#3a2222] rounded-xl p-6 space-y-2">
+              <p className="text-xs text-[#c9a87c]">今晚卖</p>
+              {open.map((p) => (
+                <p key={p.key} className="text-sm">
+                  {p.label} · 耐看{menu[p.key].scoreLook} 好用{menu[p.key].scoreUse} 好骂{menu[p.key].scoreFilth}
+                </p>
+              ))}
+              <p className="text-xs text-[#5a5860]">没写的，就是不卖。</p>
+            </section>
+          );
+        })()}
 
         {canOrder ? (
           <section className="bg-[#0f0a0a] border border-[#3a2222] rounded-xl p-6">

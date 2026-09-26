@@ -32,6 +32,7 @@ export const girlProfiles = sqliteTable("girl_profiles", {
   tonightOpening: text("tonight_opening").notNull().default(""),
   tonightContract: text("tonight_contract").notNull().default("obey"),
   clockOutNote: text("clock_out_note").notNull().default(""),
+  bodyMenu: text("body_menu").notNull().default("{}"),
   createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(unixepoch())`).notNull(),
 });
 
@@ -45,6 +46,9 @@ export const orders = sqliteTable("orders", {
   scene: text("scene").notNull().default(""),
   bodyAnchor: text("body_anchor").notNull().default(""),
   contract: text("contract").notNull().default("obey"),
+  part: text("part").notNull().default(""),
+  depth: text("depth").notNull().default(""),
+  partName: text("part_name").notNull().default(""),
   extraPay: integer("extra_pay").notNull().default(0),
   extraDemand: text("extra_demand").notNull().default(""),
   extraStatus: text("extra_status").notNull().default("none"),
@@ -115,3 +119,5 @@ export const plazaPosts = sqliteTable("plaza_posts", {
   content: text("content").notNull(),
   createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(unixepoch())`).notNull(),
 });
+
+// bodyMenu JSON lives on girl_profiles.body_menu after migration

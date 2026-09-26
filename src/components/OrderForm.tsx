@@ -1,23 +1,50 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 export function OrderForm({ girlId }: { girlId: string }) {
   const router = useRouter();
+  const [open, setOpen] = useState<any[]>([]);
+  const [part, setPart] = useState("");
+  const [depth, setDepth] = useState("");
+  const [partName, setPartName] = useState("");
   const [fantasyType, setFantasyType] = useState("情景代入");
   const [tone, setTone] = useState("submissive");
   const [detail, setDetail] = useState("");
   const [scene, setScene] = useState("雨夜酒店");
-  const [bodyAnchor, setBodyAnchor] = useState("头发还湿");
-  const [contract, setContract] = useState("obey");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  useEffect(() => {
+    fetch("/api/girls/body-public?girlId=" + girlId)
+      .then((r) => r.json())
+      .then((d) => {
+        const list = d.open || [];
+        setOpen(list);
+        if (list[0]) setPart(list[0].key);
+      });
+  }, [girlId]);
+
+  const current = open.find((p) => p.key === part);
+  const depthOptions = (current?.catalog?.depths || []).filter((d: any) => {
+    const ch = current?.depths?.[d.key];
+    return ch === "allow" || ch === "markup";
+  });
+  const names = [...(current?.namesFree || []), ...(current?.namesPaid || [])];
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (!part) {
+      setError("她今晚还没把货摆出来。");
+      return;
+    }
+    if (!depth) {
+      setError("先选做到哪一层。");
+      return;
+    }
     if (!detail.trim() || detail.length < 20) {
-      setError("请写得再具体一点（至少20字），她才知道怎么被你用");
+      setError("在她允许的范围内，把过程写具体。");
       return;
     }
     setLoading(true);
@@ -25,26 +52,69 @@ export function OrderForm({ girlId }: { girlId: string }) {
     const res = await fetch("/api/orders/create", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ girlId, fantasyType, tone, fantasyDetail: detail, scene, bodyAnchor, contract }),
+      body: JSON.stringify({
+        girlId,
+        fantasyType,
+        tone,
+        fantasyDetail: detail,
+        scene,
+        part,
+        depth,
+        partName,
+        bodyAnchor: current?.label || part,
+        contract: current?.depths?.[depth] === "markup" ? "markup" : "obey",
+      }),
     });
     const data = await res.json();
     if (!res.ok) {
-      setError(data.error || "下单失败");
+      setError(data.error || "没点上");
       setLoading(false);
       return;
     }
-    router.push(`/my-orders`);
+    router.push("/my-orders");
+  }
+
+  if (!open.length) {
+    return <p className="text-sm text-[#8b8793]">她还没摆货。今晚不卖具体部位。</p>;
   }
 
   return (
     <form onSubmit={submit} className="space-y-4">
       <div>
-        <label className="block text-xs text-[#8b8793] mb-1.5">今晚把她放在哪</label>
-        <select
-          value={scene}
-          onChange={(e) => setScene(e.target.value)}
-          className="w-full bg-[#0a0a0c] border border-[#1c1c22] rounded-md px-3 py-2.5 text-sm focus:outline-none focus:border-[#c9a87c]/50"
-        >
+        <label className="block text-xs text-[#8b8793] mb-1.5">先买哪一处</label>
+        <select value={part} onChange={(e) => { setPart(e.target.value); setDepth(""); setPartName(""); }}
+          className="w-full bg-[#0a0a0c] border border-[#1c1c22] rounded-md px-3 py-2.5 text-sm">
+          {open.map((p) => (
+            <option key={p.key} value={p.key}>{p.label} · 耐看{p.scoreLook} 好用{p.scoreUse}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label className="block text-xs text-[#8b8793] mb-1.5">做到哪一层</label>
+        <select value={depth} onChange={(e) => setDepth(e.target.value)}
+          className="w-full bg-[#0a0a0c] border border-[#1c1c22] rounded-md px-3 py-2.5 text-sm">
+          <option value="">选一层</option>
+          {depthOptions.map((d: any) => (
+            <option key={d.key} value={d.key}>
+              {d.label}{current?.depths?.[d.key] === "markup" ? "（加码）" : ""}
+            </option>
+          ))}
+        </select>
+      </div>
+      {names.length > 0 && (
+        <div>
+          <label className="block text-xs text-[#8b8793] mb-1.5">你怎么叫这里</label>
+          <select value={partName} onChange={(e) => setPartName(e.target.value)}
+            className="w-full bg-[#0a0a0c] border border-[#1c1c22] rounded-md px-3 py-2.5 text-sm">
+            <option value="">用本字</option>
+            {names.map((n) => <option key={n}>{n}</option>)}
+          </select>
+        </div>
+      )}
+      <div>
+        <label className="block text-xs text-[#8b8793] mb-1.5">放在哪</label>
+        <select value={scene} onChange={(e) => setScene(e.target.value)}
+          className="w-full bg-[#0a0a0c] border border-[#1c1c22] rounded-md px-3 py-2.5 text-sm">
           <option>雨夜酒店</option>
           <option>车后座</option>
           <option>客人家里的浴室</option>
@@ -53,71 +123,16 @@ export function OrderForm({ girlId }: { girlId: string }) {
         </select>
       </div>
       <div>
-        <label className="block text-xs text-[#8b8793] mb-1.5">抓住她今晚的哪一处</label>
-        <select value={bodyAnchor} onChange={(e) => setBodyAnchor(e.target.value)} className="w-full bg-[#0a0a0c] border border-[#1c1c22] rounded-md px-3 py-2.5 text-sm">
-          <option>头发还湿</option>
-          <option>腿站不稳</option>
-          <option>嘴还红</option>
-          <option>灯只留一盏</option>
-          <option>门没锁</option>
-        </select>
+        <label className="block text-xs text-[#8b8793] mb-1.5">过程（写在她允许的范围内）</label>
+        <textarea value={detail} onChange={(e) => setDetail(e.target.value)} rows={5}
+          placeholder="先写你怎么用这一处。不要越她勾掉的档。"
+          className="w-full bg-[#0a0a0c] border border-[#1c1c22] rounded-md px-3 py-2.5 text-sm" />
       </div>
-      <div>
-        <label className="block text-xs text-[#8b8793] mb-1.5">认她今晚的契约</label>
-        <select value={contract} onChange={(e) => setContract(e.target.value)} className="w-full bg-[#0a0a0c] border border-[#1c1c22] rounded-md px-3 py-2.5 text-sm">
-          <option value="obey">完全听话</option>
-          <option value="cold">表面冷淡、身体很贱</option>
-          <option value="resist">先拒后软</option>
-          <option value="switch">短暂主导再被按回去</option>
-        </select>
-      </div>
-      <div>
-        <label className="block text-xs text-[#8b8793] mb-1.5">幻想类型</label>
-        <select
-          value={fantasyType}
-          onChange={(e) => setFantasyType(e.target.value)}
-          className="w-full bg-[#0a0a0c] border border-[#1c1c22] rounded-md px-3 py-2.5 text-sm focus:outline-none focus:border-[#c9a87c]/50"
-        >
-          <option>情景代入</option>
-          <option>角色扮演</option>
-          <option>定制剧本</option>
-          <option>纯文字对话</option>
-          <option>语音幻想描述</option>
-        </select>
-      </div>
-      <div>
-        <label className="block text-xs text-[#8b8793] mb-1.5">希望她的语气</label>
-        <select
-          value={tone}
-          onChange={(e) => setTone(e.target.value)}
-          className="w-full bg-[#0a0a0c] border border-[#1c1c22] rounded-md px-3 py-2.5 text-sm focus:outline-none focus:border-[#c9a87c]/50"
-        >
-          <option value="submissive">顺从依恋</option>
-          <option value="tease">轻挑戏弄</option>
-          <option value="gentle">温柔低语</option>
-          <option value="cold">冷淡克制</option>
-          <option value="dominant">强势主导</option>
-        </select>
-      </div>
-      <div>
-        <label className="block text-xs text-[#8b8793] mb-1.5">
-          你的具体需求（越详细，她写得越下贱）
-        </label>
-        <textarea
-          value={detail}
-          onChange={(e) => setDetail(e.target.value)}
-          rows={6}
-          placeholder="例如：想让她跪在酒店门口等我，被我用鞋尖抬起下巴，然后自己把衣服一件件脱掉……边脱边说自己是什么。"
-          className="w-full bg-[#0a0a0c] border border-[#1c1c22] rounded-md px-3 py-2.5 text-sm focus:outline-none focus:border-[#c9a87c]/50 resize-y"
-        />
-      </div>
+      <input type="hidden" value={fantasyType} />
+      <input type="hidden" value={tone} />
       {error && <p className="text-[#a85c5c] text-sm">{error}</p>}
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full py-3 bg-[#c9a87c] text-[#070708] font-medium rounded-md hover:bg-[#d4b88a] disabled:opacity-50"
-      >
-        {loading ? "提交中..." : "点她 · 下单"}
+      <button type="submit" disabled={loading} className="w-full py-3 bg-[#c9a87c] text-[#070708] font-medium rounded-md disabled:opacity-50">
+        {loading ? "在点…" : "按这处点她"}
       </button>
     </form>
   );

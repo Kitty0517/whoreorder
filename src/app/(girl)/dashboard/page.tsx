@@ -82,7 +82,8 @@ export default async function GirlDashboard() {
         <section className="bg-[#0f0a0a] border border-[#3a2222] rounded-xl p-6">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm text-[#c9a87c]">今晚牌</h2>
-            <Link href="/clock-in" className="text-xs text-[#8b8793] hover:text-[#c9a87c]">
+            <Link href="/body" className="text-xs text-[#8b8793] hover:text-[#c9a87c]">卖哪几处</Link>
+          <Link href="/clock-in" className="text-xs text-[#8b8793] hover:text-[#c9a87c]">
               {hasTonight ? "改今晚的自己" : "上钟 · 写下今晚"}
             </Link>
           </div>
@@ -191,6 +192,7 @@ export default async function GirlDashboard() {
         )}
 
         <div className="pt-6 border-t border-[#1c1c22] text-center space-x-4">
+          <Link href="/body" className="text-xs text-[#8b8793] hover:text-[#c9a87c]">卖哪几处</Link>
           <Link href="/clock-in" className="text-xs text-[#8b8793] hover:text-[#c9a87c]">今晚牌</Link>
           <Link href="/clock-out" className="text-xs text-[#8b8793] hover:text-[#c9a87c]">下钟</Link>
           <Link href="/live" className="text-xs text-[#8b8793] hover:text-[#c9a87c]">等候室</Link>

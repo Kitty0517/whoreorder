@@ -30,6 +30,9 @@ export default async function GirlOrderPage({
       extraPay: orders.extraPay,
       extraDemand: orders.extraDemand,
       extraStatus: orders.extraStatus,
+      part: orders.part,
+      depth: orders.depth,
+      partName: orders.partName,
       createdAt: orders.createdAt,
       clientName: users.displayName,
     })
@@ -63,6 +66,7 @@ export default async function GirlOrderPage({
           <p className="text-xs text-[#a85c5c] mb-2">有人点了你</p>
           <h1 className="text-xl text-[#c9a87c]">{order.clientName}</h1>
           <p className="text-sm text-[#e6e4e0] mt-3 leading-relaxed">「{hook}」</p>
+          {order.part ? <p className="text-xs text-[#c9a87c] mt-2">他买的是你的{order.partName || order.part} · {order.depth}</p> : null}
           <p className="text-xs text-[#5a5860] mt-2">
             {new Date(order.createdAt).toLocaleString("zh-CN")}
             {order.scene ? ` · ${order.scene}` : ""} · {toneMap[order.tone] || order.tone}
