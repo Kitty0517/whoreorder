@@ -5,6 +5,7 @@ import { eq, and } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ReviewForm } from "@/components/ReviewForm";
+import { MarkupForm } from "@/components/MarkupForm";
 
 export default async function ClientOrderDetailPage({
   params,
@@ -21,6 +22,13 @@ export default async function ClientOrderDetailPage({
       fantasyDetail: orders.fantasyDetail,
       status: orders.status,
       girlReply: orders.girlReply,
+      replyOpening: orders.replyOpening,
+      replyDuring: orders.replyDuring,
+      replyEnding: orders.replyEnding,
+      sentOpening: orders.sentOpening,
+      sentDuring: orders.sentDuring,
+      sentEnding: orders.sentEnding,
+      extraStatus: orders.extraStatus,
       createdAt: orders.createdAt,
       girlId: orders.girlId,
       girlName: users.displayName,
@@ -59,19 +67,36 @@ export default async function ClientOrderDetailPage({
           <p className="text-sm leading-relaxed whitespace-pre-wrap">{order.fantasyDetail}</p>
         </section>
 
-        {order.status === "completed" && order.girlReply ? (
-          <section className="bg-[#0f0a0a] border border-[#3a2222] rounded-xl p-6">
-            <p className="text-xs text-[#c9a87c] mb-3">她的服侍内容</p>
-            <div className="text-sm leading-relaxed whitespace-pre-wrap text-[#e6e4e0]">
-              {order.girlReply}
+        <section className="space-y-3">
+          {order.sentOpening ? (
+            <div className="bg-[#0f0a0a] border border-[#3a2222] rounded-xl p-5">
+              <p className="text-xs text-[#c9a87c] mb-2">开场</p>
+              <p className="text-sm whitespace-pre-wrap">{order.replyOpening}</p>
             </div>
+          ) : null}
+          {order.sentDuring ? (
+            <div className="bg-[#0f0a0a] border border-[#3a2222] rounded-xl p-5">
+              <p className="text-xs text-[#c9a87c] mb-2">被用</p>
+              <p className="text-sm whitespace-pre-wrap">{order.replyDuring}</p>
+            </div>
+          ) : null}
+          {order.sentEnding ? (
+            <div className="bg-[#0f0a0a] border border-[#3a2222] rounded-xl p-5">
+              <p className="text-xs text-[#c9a87c] mb-2">收场</p>
+              <p className="text-sm whitespace-pre-wrap">{order.replyEnding}</p>
+            </div>
+          ) : null}
+          {!order.sentOpening && !order.sentDuring && !order.sentEnding && (
+            <div className="bg-[#111114] border border-[#1c1c22] rounded-xl p-6 text-center text-[#8b8793] text-sm">
+              {order.status === "pending" ? "她还没开门。" : "她正在写，这段还没给你看。"}
+            </div>
+          )}
+        </section>
+
+        {order.status !== "completed" && (
+          <section className="bg-[#111114] border border-[#1c1c22] rounded-xl p-6">
+            <MarkupForm orderId={order.id} />
           </section>
-        ) : (
-          <div className="bg-[#111114] border border-[#1c1c22] rounded-xl p-6 text-center text-[#8b8793] text-sm">
-            {order.status === "pending"
-              ? "她还没接单，请稍等。"
-              : "她正在写，马上就好。"}
-          </div>
         )}
 
         {order.status === "completed" && !existingReview && (

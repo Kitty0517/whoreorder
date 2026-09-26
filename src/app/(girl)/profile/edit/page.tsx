@@ -10,6 +10,8 @@ export default function EditProfilePage() {
   const [tags, setTags] = useState("");
   const [price, setPrice] = useState(200);
   const [emoji, setEmoji] = useState("🖤");
+  const [photoUrl, setPhotoUrl] = useState("");
+  const [voiceUrl, setVoiceUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
 
@@ -21,6 +23,8 @@ export default function EditProfilePage() {
         if (d.tags) setTags(JSON.parse(d.tags).join(", "));
         if (d.price) setPrice(d.price);
         if (d.avatarEmoji) setEmoji(d.avatarEmoji);
+        if (d.photoUrl) setPhotoUrl(d.photoUrl);
+        if (d.voiceUrl) setVoiceUrl(d.voiceUrl);
       });
   }, []);
 
@@ -36,6 +40,8 @@ export default function EditProfilePage() {
         tags: tags.split(/[,，]/).map((t) => t.trim()).filter(Boolean),
         price: Number(price),
         avatarEmoji: emoji,
+        photoUrl,
+        voiceUrl,
       }),
     });
     if (res.ok) {
@@ -65,6 +71,14 @@ export default function EditProfilePage() {
               onChange={(e) => setEmoji(e.target.value)}
               className="w-full bg-[#0a0a0c] border border-[#1c1c22] rounded-md px-3 py-2.5 text-sm"
             />
+          </div>
+          <div>
+            <label className="block text-xs text-[#8b8793] mb-1.5">照片链接（自己图床）</label>
+            <input value={photoUrl} onChange={(e) => setPhotoUrl(e.target.value)} className="w-full bg-[#0a0a0c] border border-[#1c1c22] rounded-md px-3 py-2.5 text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs text-[#8b8793] mb-1.5">语音链接（自己托管的音频）</label>
+            <input value={voiceUrl} onChange={(e) => setVoiceUrl(e.target.value)} className="w-full bg-[#0a0a0c] border border-[#1c1c22] rounded-md px-3 py-2.5 text-sm" />
           </div>
           <div>
             <label className="block text-xs text-[#8b8793] mb-1.5">简介（用第一人称，写得下贱一点）</label>

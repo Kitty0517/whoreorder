@@ -13,6 +13,7 @@ export async function POST(req: NextRequest) {
       tonightBody: body.tonightBody || "",
       tonightAllowed: body.tonightAllowed || "",
       tonightOpening: body.tonightOpening || "",
+      tonightContract: body.tonightContract || "obey",
     };
     if (body.status && ["idle", "busy", "off"].includes(body.status)) {
       patch.status = body.status;

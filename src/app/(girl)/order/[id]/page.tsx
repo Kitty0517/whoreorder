@@ -27,6 +27,9 @@ export default async function GirlOrderPage({
       replyDuring: orders.replyDuring,
       replyEnding: orders.replyEnding,
       aftercare: orders.aftercare,
+      extraPay: orders.extraPay,
+      extraDemand: orders.extraDemand,
+      extraStatus: orders.extraStatus,
       createdAt: orders.createdAt,
       clientName: users.displayName,
     })
@@ -85,6 +88,9 @@ export default async function GirlOrderPage({
               during={order.replyDuring || ""}
               ending={order.replyEnding || ""}
               aftercare={order.aftercare || ""}
+              extraPay={order.extraPay}
+              extraDemand={order.extraDemand || ""}
+              extraStatus={order.extraStatus || "none"}
             />
           </section>
         ) : (

@@ -36,7 +36,12 @@ export default async function BrowsePage() {
           <h1 className="text-[#c9a87c] tracking-widest text-lg">Noir Atelier</h1>
           <p className="text-xs text-[#8b8793]">点一个听话的</p>
         </div>
-        <LogoutButton />
+        <div className="flex gap-3 items-center">
+          <Link href="/plaza" className="text-xs text-[#8b8793]">广场</Link>
+          <Link href="/rank" className="text-xs text-[#8b8793]">排行</Link>
+          <Link href="/wallet" className="text-xs text-[#8b8793]">钱包</Link>
+          <LogoutButton />
+        </div>
       </header>
 
       <main className="max-w-5xl mx-auto px-6 py-10">

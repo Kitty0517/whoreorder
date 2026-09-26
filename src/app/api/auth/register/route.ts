@@ -30,6 +30,7 @@ export async function POST(req: NextRequest) {
       passwordHash,
       role,
       displayName,
+      coins: role === "client" ? 1000 : 0,
     });
 
     if (role === "girl") {

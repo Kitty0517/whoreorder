@@ -191,12 +191,10 @@ export default async function GirlDashboard() {
         )}
 
         <div className="pt-6 border-t border-[#1c1c22] text-center space-x-4">
-          <Link href="/clock-in" className="text-xs text-[#8b8793] hover:text-[#c9a87c]">
-            今晚牌
-          </Link>
-          <Link href="/profile/edit" className="text-xs text-[#8b8793] hover:text-[#c9a87c]">
-            固定资料
-          </Link>
+          <Link href="/clock-in" className="text-xs text-[#8b8793] hover:text-[#c9a87c]">今晚牌</Link>
+          <Link href="/clock-out" className="text-xs text-[#8b8793] hover:text-[#c9a87c]">下钟</Link>
+          <Link href="/live" className="text-xs text-[#8b8793] hover:text-[#c9a87c]">等候室</Link>
+          <Link href="/profile/edit" className="text-xs text-[#8b8793] hover:text-[#c9a87c]">固定资料</Link>
         </div>
       </main>
     </div>

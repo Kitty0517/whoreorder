@@ -10,6 +10,7 @@ export default function ClockInPage() {
   const [body, setBody] = useState("");
   const [allowed, setAllowed] = useState("");
   const [opening, setOpening] = useState("");
+  const [contract, setContract] = useState("obey");
   const [goIdle, setGoIdle] = useState(true);
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
@@ -22,6 +23,7 @@ export default function ClockInPage() {
         setBody(d.tonightBody || "");
         setAllowed(d.tonightAllowed || "");
         setOpening(d.tonightOpening || "");
+        setContract(d.tonightContract || "obey");
       })
       .catch(() => {});
   }, []);
@@ -41,6 +43,7 @@ export default function ClockInPage() {
         tonightBody: body,
         tonightAllowed: allowed,
         tonightOpening: opening,
+        tonightContract: contract,
         status: goIdle ? "idle" : undefined,
       }),
     });
@@ -92,6 +95,15 @@ export default function ClockInPage() {
               placeholder="可被当面羞辱 / 可跪着等 / 可被加价加码"
               className="w-full bg-[#0a0a0c] border border-[#1c1c22] rounded-md px-3 py-2.5 text-sm"
             />
+          </div>
+          <div>
+            <label className="block text-xs text-[#8b8793] mb-1.5">今晚契约</label>
+            <select value={contract} onChange={(e) => setContract(e.target.value)} className="w-full bg-[#0a0a0c] border border-[#1c1c22] rounded-md px-3 py-2.5 text-sm">
+              <option value="obey">完全听话</option>
+              <option value="cold">表面冷淡、身体很贱</option>
+              <option value="resist">先拒后软</option>
+              <option value="switch">短暂主导再被按回去</option>
+            </select>
           </div>
           <div>
             <label className="block text-xs text-[#8b8793] mb-1.5">开门的那一句</label>

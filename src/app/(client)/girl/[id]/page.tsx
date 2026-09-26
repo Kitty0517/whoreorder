@@ -1,10 +1,11 @@
 import { requireUser } from "@/lib/auth";
 import { db } from "@/db";
 import { girlProfiles, users, reviews, orders } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { OrderForm } from "@/components/OrderForm";
+import { WishButton } from "@/components/WishButton";
 
 export default async function GirlDetailPage({
   params,
@@ -29,6 +30,12 @@ export default async function GirlDetailPage({
       tonightBody: girlProfiles.tonightBody,
       tonightAllowed: girlProfiles.tonightAllowed,
       tonightOpening: girlProfiles.tonightOpening,
+      tonightContract: girlProfiles.tonightContract,
+      photoUrl: girlProfiles.photoUrl,
+      voiceUrl: girlProfiles.voiceUrl,
+      liveOn: girlProfiles.liveOn,
+      viewCount: girlProfiles.viewCount,
+      showPublicReviews: girlProfiles.showPublicReviews,
     })
     .from(girlProfiles)
     .innerJoin(users, eq(girlProfiles.userId, users.id))
@@ -36,6 +43,9 @@ export default async function GirlDetailPage({
     .limit(1);
 
   if (!girl) notFound();
+
+  await db.update(girlProfiles).set({ viewCount: sql`${girlProfiles.viewCount} + 1` }).where(eq(girlProfiles.userId, id));
+
 
   const recentReviews = await db
     .select({
@@ -63,7 +73,9 @@ export default async function GirlDetailPage({
 
       <main className="max-w-2xl mx-auto px-6 py-10 space-y-8">
         <div className="flex items-start gap-5">
-          <div className="text-5xl">{girl.avatarEmoji}</div>
+          <div className="text-5xl">
+            {girl.photoUrl ? <img src={girl.photoUrl} alt="" className="w-20 h-20 object-cover rounded-full" /> : girl.avatarEmoji}
+          </div>
           <div>
             <h1 className="text-2xl text-[#c9a87c]">{girl.displayName}</h1>
             <p className="text-sm text-[#8b8793] mt-1">{girl.bio}</p>
@@ -74,9 +86,16 @@ export default async function GirlDetailPage({
                 </span>
               ))}
             </div>
-            <p className="text-sm text-[#c9a87c] mt-3">{girl.price} / 次服务</p>
+            <p className="text-sm text-[#c9a87c] mt-3">{girl.price} / 次服务 · {girl.viewCount} 人看过</p>
+            <div className="flex gap-3 mt-3 text-xs">
+              <form action="/api/wishlist" method="post"></form>
+              <a href="#" id="wish" className="text-[#8b8793]">想今晚点她（用旁边按钮）</a>
+              {girl.liveOn ? <Link href={`/live/${girl.id}`} className="text-[#5c8a5c]">她在等候室</Link> : null}
+              {girl.voiceUrl ? <a href={girl.voiceUrl} className="text-[#c9a87c]" target="_blank">听她的声音</a> : null}
+            </div>
           </div>
         </div>
+        <WishButton girlId={girl.id} />
 
         {(girl.tonightPersona || girl.tonightOpening) && (
           <section className="bg-[#0f0a0a] border border-[#3a2222] rounded-xl p-6 space-y-2">
