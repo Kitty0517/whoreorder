@@ -112,6 +112,26 @@ export const SPECIAL_KINKS = [
     label: "重物化",
     hint: "更短的指令、更少的人话、当器具用。",
   },
+  {
+    key: "play_dog",
+    label: "狗·拟畜",
+    hint: "人扮狗：跪爬、项圈感、指令、报数。文字人设，不是真狗。",
+  },
+  {
+    key: "play_pony",
+    label: "马·拟畜",
+    hint: "人扮马：辔头感、步伐、负重、展示。文字人设，不是真马。",
+  },
+  {
+    key: "play_pig",
+    label: "猪·拟畜",
+    hint: "人扮猪：更脏的畜类羞辱、饲养感、当牲口编排。文字人设，不是真猪。",
+  },
+  {
+    key: "play_livestock",
+    label: "牲口总项",
+    hint: "不指定哪种，整体按可被饲养、可被赶的牲口来用。仍是人与人的文字。",
+  },
 ] as const;
 
 export type PartKey = (typeof PARTS)[number]["key"];

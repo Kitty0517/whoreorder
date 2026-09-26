@@ -192,7 +192,7 @@ export function OrderForm({ girlId }: { girlId: string }) {
               </button>
             ))}
           </div>
-          <p className="text-[11px] text-[#5a5860] mt-1">跨物种为非人幻想；多人为文字里多人。</p>
+          <p className="text-[11px] text-[#5a5860] mt-1">非人/猪马狗拟畜均为文字人设，不是真实动物。</p>
         </div>
       )}
       <div>

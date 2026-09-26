@@ -227,7 +227,7 @@ export default function BodyArchivePage() {
         <section className="bg-[#111114] border border-[#1c1c22] rounded-xl p-5 space-y-3">
           <h2 className="text-sm text-[#c9a87c]">特殊癖好（整店，默认关）</h2>
           <p className="text-xs text-[#5a5860] leading-relaxed">
-            点亮后客人才看得到。跨物种是非人/魔物幻想，不是真实动物。多人是文字里被多于一人使用。
+            点亮后客人才看得到。跨物种、猪马狗均为人设/拟畜/非人幻想，不是真实动物。多人是文字里被多于一人使用。
           </p>
           {SPECIAL_KINKS.map((k) => (
             <label key={k.key} className="flex gap-3 items-start text-sm border border-[#1c1c22] rounded-md p-3">
