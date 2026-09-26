@@ -6,6 +6,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ReviewForm } from "@/components/ReviewForm";
 import { MarkupForm } from "@/components/MarkupForm";
+import { ExtendClock } from "@/components/ExtendClock";
+import { formatClock, roomLeftSeconds, DEPTH_LABEL, isRoomExpired } from "@/lib/house";
 
 export default async function ClientOrderDetailPage({
   params,
@@ -29,6 +31,8 @@ export default async function ClientOrderDetailPage({
       sentDuring: orders.sentDuring,
       sentEnding: orders.sentEnding,
       extraStatus: orders.extraStatus,
+      roomEndsAt: orders.roomEndsAt,
+      unlockedDepth: orders.unlockedDepth,
       createdAt: orders.createdAt,
       girlId: orders.girlId,
       girlName: users.displayName,
@@ -95,7 +99,15 @@ export default async function ClientOrderDetailPage({
 
         {order.status !== "completed" && (
           <section className="bg-[#111114] border border-[#1c1c22] rounded-xl p-6">
-            <MarkupForm orderId={order.id} />
+            <div className="space-y-4">
+              <p className="text-xs text-[#8b8793]">
+                钟 {formatClock(roomLeftSeconds(order.roomEndsAt))}
+                {isRoomExpired(order.roomEndsAt) ? " · 已到" : ""}
+                {" · 开到 " + (DEPTH_LABEL[order.unlockedDepth || ""] || order.unlockedDepth || "—")}
+              </p>
+              <ExtendClock orderId={order.id} />
+              <MarkupForm orderId={order.id} />
+            </div>
           </section>
         )}
 

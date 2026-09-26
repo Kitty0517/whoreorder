@@ -18,6 +18,7 @@ export default async function FloorPage() {
       price: girlProfiles.price,
       bodyMenu: girlProfiles.bodyMenu,
       tonightOpening: girlProfiles.tonightOpening,
+      viewCount: girlProfiles.viewCount,
     })
     .from(girlProfiles)
     .innerJoin(users, eq(girlProfiles.userId, users.id));
@@ -67,7 +68,7 @@ export default async function FloorPage() {
                     <div>
                       <p className="text-[#e6e4e0] font-medium">{g.displayName}</p>
                       <p className="text-xs text-[#8b8793] mt-1">
-                        {inRoom ? "房里有人" : "空着可叫"} · {g.price} 币起
+                        {inRoom ? "房里有人" : "空着可叫"} · {g.price} 币起 · {g.viewCount || 0} 人翻过
                       </p>
                       <p className="text-sm text-[#c9a87c] mt-2">
                         卖：{selling.length ? selling.join("、") : "还没摆货"}

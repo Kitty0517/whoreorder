@@ -1,6 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { allowedSegments, DEPTH_LABEL, formatClock, isRoomExpired, roomLeftSeconds } from "@/lib/house";
 
 const REACTIONS = ["嗯……", "等一下……", "好深……", "听你的。", "不要停。", "我很听话。"];
 
@@ -13,8 +14,12 @@ export function ReplyForm(props: {
   extraPay?: number;
   extraDemand?: string;
   extraStatus?: string;
+  unlockedDepth?: string;
+  roomEndsAt?: number | Date | null;
 }) {
   const router = useRouter();
+  const unlocked = props.unlockedDepth || "look";
+  const allow = allowedSegments(unlocked);
   const [o, setO] = useState(props.opening);
   const [d, setD] = useState(props.during);
   const [e, setE] = useState(props.ending);
@@ -22,16 +27,37 @@ export function ReplyForm(props: {
   const [focus, setFocus] = useState<"o" | "d" | "e">("o");
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
+  const [left, setLeft] = useState(roomLeftSeconds(props.roomEndsAt));
+
+  useEffect(() => {
+    const t = setInterval(() => setLeft(roomLeftSeconds(props.roomEndsAt)), 1000);
+    return () => clearInterval(t);
+  }, [props.roomEndsAt]);
+
+  const expired = left !== null && left <= 0;
 
   function insert(text: string) {
+    if (expired) return;
     if (focus === "o") setO((v) => v + text);
-    if (focus === "d") setD((v) => v + text);
-    if (focus === "e") setE((v) => v + text);
+    if (focus === "d" && allow.during) setD((v) => v + text);
+    if (focus === "e" && allow.ending) setE((v) => v + text);
   }
 
   async function submit(action: string, send?: string) {
-    if (action === "complete" && (!o.trim() || !d.trim() || !e.trim())) {
-      setMsg("三段都要写完才能完事。");
+    if (expired && action !== "complete") {
+      setMsg("钟到了。等他续钟，或直接送客。");
+      return;
+    }
+    if (send === "during" && !allow.during) {
+      setMsg("这一档还没开。");
+      return;
+    }
+    if (send === "ending" && !allow.ending) {
+      setMsg("还没开到收场。");
+      return;
+    }
+    if (action === "complete" && !o.trim()) {
+      setMsg("至少把门开开。");
       return;
     }
     setLoading(true);
@@ -41,7 +67,15 @@ export function ReplyForm(props: {
       body: JSON.stringify({ orderId: props.orderId, opening: o, during: d, ending: e, aftercare: a, action, send }),
     });
     const data = await res.json();
-    setMsg(res.ok ? (send ? "这段已经给他看了。" : action === "complete" ? "完事了。余韵只留给你。" : "还没写完，先跪着等。") : data.error);
+    setMsg(
+      res.ok
+        ? send
+          ? "这段已经给他看了。"
+          : action === "complete"
+          ? "送客了。你回柜上。"
+          : "还没写完，先跪着等。"
+        : data.error
+    );
     router.refresh();
     setLoading(false);
   }
@@ -57,43 +91,99 @@ export function ReplyForm(props: {
 
   return (
     <div className="space-y-6">
+      <div className={`text-sm px-4 py-3 rounded-md border ${expired ? "border-[#a85c5c] text-[#a85c5c]" : "border-[#3a2222] text-[#c9a87c]"}`}>
+        钟 {formatClock(left)}
+        {expired ? " · 到了。续钟或送客。" : null}
+        <span className="text-[#8b8793] ml-2">已开到：{DEPTH_LABEL[unlocked] || unlocked}</span>
+      </div>
+
       {props.extraStatus === "pending" && (
         <div className="border border-[#c9a87c]/40 rounded-md p-4 space-y-2">
-          <p className="text-xs text-[#c9a87c]">他加了 {props.extraPay} 币，要你多听话这个：</p>
+          <p className="text-xs text-[#c9a87c]">门在敲。他加了 {props.extraPay} 币，要开这一档：</p>
           <p className="text-sm">{props.extraDemand}</p>
           <div className="flex gap-2 pt-1">
-            <button onClick={() => markup("accept")} className="text-xs px-3 py-1.5 bg-[#c9a87c] text-black rounded">接加码</button>
-            <button onClick={() => markup("clarify")} className="text-xs px-3 py-1.5 border border-[#3a2222] rounded">再写清楚</button>
-            <button onClick={() => markup("reject")} className="text-xs px-3 py-1.5 border border-[#3a2222] rounded">拒</button>
+            <button type="button" onClick={() => markup("accept")} className="text-xs px-3 py-1.5 bg-[#c9a87c] text-black rounded">接</button>
+            <button type="button" onClick={() => markup("clarify")} className="text-xs px-3 py-1.5 border border-[#3a2222] rounded">再写清楚</button>
+            <button type="button" onClick={() => markup("reject")} className="text-xs px-3 py-1.5 border border-[#3a2222] rounded">拒</button>
           </div>
         </div>
       )}
       {props.extraStatus === "accepted" && (
-        <p className="text-xs text-[#c9a87c]">加码已接：{props.extraDemand}</p>
+        <p className="text-xs text-[#c9a87c]">加档已接：{props.extraDemand}</p>
       )}
 
-      <div className="flex flex-wrap gap-2">
-        {REACTIONS.map((r) => (
-          <button key={r} type="button" onClick={() => insert(r)} className="text-[11px] px-2 py-1 border border-[#3a2222] rounded text-[#c9b8b8]">
-            {r}
+      {!expired && (
+        <div className="flex flex-wrap gap-2">
+          {REACTIONS.map((r) => (
+            <button key={r} type="button" onClick={() => insert(r)} className="text-[11px] px-2 py-1 border border-[#3a2222] rounded text-[#c9b8b8]">
+              {r}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div>
+        <label className="block text-xs text-[#c9a87c] mb-1.5">1. 开场 · 门开的那一瞬</label>
+        <textarea
+          value={o}
+          onFocus={() => setFocus("o")}
+          onChange={(ev) => setO(ev.target.value)}
+          disabled={expired}
+          rows={4}
+          className="w-full bg-[#0a0a0c] border border-[#3a2222] rounded-md px-4 py-3 text-sm leading-relaxed disabled:opacity-50"
+        />
+        {!expired && (
+          <button type="button" disabled={loading || !o.trim()} onClick={() => submit("accept", "opening")} className="mt-2 text-xs text-[#c9a87c]">
+            先把开场发给他
           </button>
-        ))}
+        )}
       </div>
 
-      {[
-        { k: "o" as const, label: "1. 开场", hint: "门开的那一瞬", val: o, set: setO, send: "opening" },
-        { k: "d" as const, label: "2. 被用", hint: "正在被拆开", val: d, set: setD, send: "during" },
-        { k: "e" as const, label: "3. 收场", hint: "他还没走", val: e, set: setE, send: "ending" },
-      ].map((seg) => (
-        <div key={seg.k}>
-          <label className="block text-xs text-[#c9a87c] mb-1.5">{seg.label} · {seg.hint}</label>
-          <textarea value={seg.val} onFocus={() => setFocus(seg.k)} onChange={(ev) => seg.set(ev.target.value)} rows={seg.k === "d" ? 6 : 4}
-            className="w-full bg-[#0a0a0c] border border-[#3a2222] rounded-md px-4 py-3 text-sm leading-relaxed" />
-          <button disabled={loading || !seg.val.trim()} onClick={() => submit("serving", seg.send)} className="mt-2 text-xs text-[#c9a87c]">
-            先把这段发给他
-          </button>
-        </div>
-      ))}
+      <div>
+        <label className="block text-xs text-[#c9a87c] mb-1.5">2. 被用</label>
+        {!allow.during ? (
+          <p className="text-xs text-[#5a5860] border border-[#1c1c22] rounded-md px-4 py-3">这一档还没开。客人加码你接了，才能写。</p>
+        ) : (
+          <>
+            <textarea
+              value={d}
+              onFocus={() => setFocus("d")}
+              onChange={(ev) => setD(ev.target.value)}
+              disabled={expired}
+              rows={6}
+              className="w-full bg-[#0a0a0c] border border-[#3a2222] rounded-md px-4 py-3 text-sm leading-relaxed disabled:opacity-50"
+            />
+            {!expired && (
+              <button type="button" disabled={loading || !d.trim()} onClick={() => submit("serving", "during")} className="mt-2 text-xs text-[#c9a87c]">
+                把这段发给他
+              </button>
+            )}
+          </>
+        )}
+      </div>
+
+      <div>
+        <label className="block text-xs text-[#c9a87c] mb-1.5">3. 收场</label>
+        {!allow.ending ? (
+          <p className="text-xs text-[#5a5860] border border-[#1c1c22] rounded-md px-4 py-3">还没开到这一层。开到「许进」或更深才能写收场。</p>
+        ) : (
+          <>
+            <textarea
+              value={e}
+              onFocus={() => setFocus("e")}
+              onChange={(ev) => setE(ev.target.value)}
+              disabled={expired}
+              rows={4}
+              className="w-full bg-[#0a0a0c] border border-[#3a2222] rounded-md px-4 py-3 text-sm leading-relaxed disabled:opacity-50"
+            />
+            {!expired && (
+              <button type="button" disabled={loading || !e.trim()} onClick={() => submit("serving", "ending")} className="mt-2 text-xs text-[#c9a87c]">
+                把收场发给他
+              </button>
+            )}
+          </>
+        )}
+      </div>
 
       <div>
         <label className="block text-xs text-[#8b8793] mb-1.5">只给你看的余韵</label>
@@ -101,8 +191,14 @@ export function ReplyForm(props: {
       </div>
 
       <div className="flex gap-3">
-        <button disabled={loading} onClick={() => submit("accept")} className="flex-1 py-2.5 border border-[#c9a87c]/60 text-[#c9a87c] text-sm rounded-md">还没写完，先跪着等</button>
-        <button disabled={loading} onClick={() => submit("complete")} className="flex-1 py-2.5 bg-[#c9a87c] text-[#070708] text-sm rounded-md">完事</button>
+        {!expired && (
+          <button type="button" disabled={loading} onClick={() => submit("accept")} className="flex-1 py-2.5 border border-[#c9a87c]/60 text-[#c9a87c] text-sm rounded-md">
+            还没写完，先跪着等
+          </button>
+        )}
+        <button type="button" disabled={loading} onClick={() => submit("complete")} className="flex-1 py-2.5 bg-[#c9a87c] text-[#070708] text-sm rounded-md">
+          {expired ? "钟到了 · 送客" : "送客"}
+        </button>
       </div>
       {msg && <p className="text-xs text-[#c9a87c]">{msg}</p>}
     </div>

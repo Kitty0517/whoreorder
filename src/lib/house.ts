@@ -33,9 +33,14 @@ export function callText(part: string, depth: string, partName?: string) {
 }
 
 export function roomLeftSeconds(endsAt?: Date | number | null) {
-  if (!endsAt) return null;
-  const t = typeof endsAt === "number" ? endsAt * 1000 : endsAt.getTime();
+  if (endsAt == null) return null;
+  const t = typeof endsAt === "number" ? endsAt * 1000 : new Date(endsAt).getTime();
   return Math.max(0, Math.floor((t - Date.now()) / 1000));
+}
+
+export function isRoomExpired(endsAt?: Date | number | null) {
+  const left = roomLeftSeconds(endsAt);
+  return left !== null && left <= 0;
 }
 
 export function formatClock(sec: number | null) {
@@ -43,4 +48,22 @@ export function formatClock(sec: number | null) {
   const m = Math.floor(sec / 60);
   const s = sec % 60;
   return `${m}:${String(s).padStart(2, "0")}`;
+}
+
+/** 开到哪一档，允许写哪几段 */
+export function allowedSegments(unlockedDepth: string) {
+  const i = depthIndex(unlockedDepth || "look");
+  return {
+    opening: true,
+    during: i >= 1,
+    ending: i >= 2,
+  };
+}
+
+export function segmentBlockedReason(seg: "opening" | "during" | "ending", unlockedDepth: string) {
+  const a = allowedSegments(unlockedDepth);
+  if (a[seg]) return null;
+  if (seg === "during") return "这一档还没开。客人加码你接了，才能写被用。";
+  if (seg === "ending") return "还没开到这一层。加档或开到「许进」才能收场。";
+  return "档不够";
 }

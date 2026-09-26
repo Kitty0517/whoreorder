@@ -105,6 +105,8 @@ export default async function GirlOrderPage({
               extraPay={order.extraPay}
               extraDemand={order.extraDemand || ""}
               extraStatus={order.extraStatus || "none"}
+              unlockedDepth={order.unlockedDepth || "look"}
+              roomEndsAt={order.roomEndsAt}
             />
           </section>
         ) : (
