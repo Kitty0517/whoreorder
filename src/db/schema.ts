@@ -34,6 +34,8 @@ export const girlProfiles = sqliteTable("girl_profiles", {
   clockOutNote: text("clock_out_note").notNull().default(""),
   bodyMenu: text("body_menu").notNull().default("{}"),
   watchers: text("watchers").notNull().default("[]"),
+  heatOn: integer("heat_on").notNull().default(0),
+  heatConfig: text("heat_config").notNull().default("{}"),
   createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(unixepoch())`).notNull(),
 });
 

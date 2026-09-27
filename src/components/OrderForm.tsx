@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { playTagLabel, specialLabel } from "@/lib/bodyMenu";
 import { calculateQuote, DEFAULT_PRICING, type PricingConfig } from "@/lib/pricing";
+import { SCENES, sceneLabel } from "@/lib/scenes";
 
 export function OrderForm({ girlId }: { girlId: string }) {
   const router = useRouter();
@@ -18,7 +19,8 @@ export function OrderForm({ girlId }: { girlId: string }) {
   const [multiSeats, setMultiSeats] = useState(1);
   const [packageType, setPackageType] = useState<"none" | "light" | "std" | "full">("none");
   const [detail, setDetail] = useState("");
-  const [scene, setScene] = useState("雨夜酒店");
+  const [scene, setScene] = useState("hotel_window");
+  const [heatOn, setHeatOn] = useState(false);
   const [minutes, setMinutes] = useState(20);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -32,6 +34,13 @@ export function OrderForm({ girlId }: { girlId: string }) {
         setSpecialOpen(d.specialOpen || []);
         if (d.pricing) setPricing(d.pricing);
         if (list[0]) setPart(list[0].key);
+        if (d.heatOn && d.heat) {
+          setHeatOn(true);
+          setPlayTags((d.heat.playTags || []).slice(0, 3));
+          setSpecialTags(d.heat.specialTags || []);
+          setMinutes(d.heat.defaultMinutes || 20);
+          if (d.heat.scenes?.[0]) setScene(d.heat.scenes[0]);
+        }
       });
   }, [girlId]);
 
@@ -270,20 +279,27 @@ export function OrderForm({ girlId }: { girlId: string }) {
         </div>
       )}
 
+      {heatOn && (
+        <p className="text-xs text-[#c9a87c] border border-[#c9a87c]/30 rounded px-3 py-2">
+          她在发情档：玩法已预填，少话，快用。
+        </p>
+      )}
       <div>
-        <label className="block text-xs text-[#8b8793] mb-1.5">放在哪</label>
-        <select
-          value={scene}
-          onChange={(e) => setScene(e.target.value)}
-          className="w-full bg-[#0a0a0c] border border-[#1c1c22] rounded-md px-3 py-2.5 text-sm"
-        >
-          <option>雨夜酒店</option>
-          <option>车后座</option>
-          <option>客人家里的浴室</option>
-          <option>楼道</option>
-          <option>她自己的房间</option>
-          <option>非人巢穴（幻想）</option>
-        </select>
+        <label className="block text-xs text-[#8b8793] mb-1.5">场景</label>
+        <div className="flex flex-wrap gap-2">
+          {SCENES.map((s) => (
+            <button
+              key={s.key}
+              type="button"
+              onClick={() => setScene(s.key)}
+              className={`text-xs px-2 py-1 rounded border ${
+                scene === s.key ? "border-[#c9a87c] text-[#c9a87c]" : "border-[#2a2a32] text-[#5a5860]"
+              }`}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div>
@@ -292,7 +308,7 @@ export function OrderForm({ girlId }: { girlId: string }) {
           value={detail}
           onChange={(e) => setDetail(e.target.value)}
           rows={4}
-          placeholder="在她允许的范围内，一句具体指令。"
+          placeholder={heatOn ? "一句指令。别写长。" : "在她允许的范围内，一句具体指令。"}
           className="w-full bg-[#0a0a0c] border border-[#1c1c22] rounded-md px-3 py-2.5 text-sm"
         />
       </div>

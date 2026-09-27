@@ -1,12 +1,14 @@
 import { requireUser } from "@/lib/auth";
 import { db } from "@/db";
-import { orders, users } from "@/db/schema";
+import { orders, users, girlProfiles } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { ReplyForm } from "@/components/ReplyForm";
 import Link from "next/link";
 import { callText, DEPTH_LABEL, formatClock, roomLeftSeconds } from "@/lib/house";
 import { playTagLabel, specialLabel } from "@/lib/bodyMenu";
+import { parseHeat } from "@/lib/heat";
+import { sceneLabel } from "@/lib/scenes";
 
 export default async function GirlOrderPage({
   params,
@@ -49,6 +51,10 @@ export default async function GirlOrderPage({
     .limit(1);
 
   if (!order) notFound();
+
+  const [profile] = await db.select().from(girlProfiles).where(eq(girlProfiles.userId, user.id)).limit(1);
+  const heat = parseHeat(profile?.heatConfig);
+  const heatOn = !!profile?.heatOn;
 
   const toneMap: Record<string, string> = {
     cold: "冷淡克制",
@@ -94,7 +100,7 @@ export default async function GirlOrderPage({
           })()}
           <p className="text-xs text-[#5a5860] mt-2">
             {new Date(order.createdAt).toLocaleString("zh-CN")}
-            {order.scene ? ` · ${order.scene}` : ""} · {toneMap[order.tone] || order.tone}
+            {order.scene ? ` · ${sceneLabel(order.scene)}` : ""} · {toneMap[order.tone] || order.tone}
           </p>
         </div>
 
@@ -124,6 +130,8 @@ export default async function GirlOrderPage({
               roomEndsAt={order.roomEndsAt}
               playTags={(() => { try { return JSON.parse(order.playTags || "[]"); } catch { return []; } })()}
               specialTags={(() => { try { return JSON.parse(order.specialTags || "[]"); } catch { return []; } })()}
+              heatOn={heatOn}
+              allowSelfUpgrade={heat.allowSelfUpgrade}
             />
           </section>
         ) : (

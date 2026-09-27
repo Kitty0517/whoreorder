@@ -7,6 +7,7 @@ import { StatusSwitcher } from "@/components/StatusSwitcher";
 import { LogoutButton } from "@/components/LogoutButton";
 import { callText, DEPTH_LABEL, PART_LABEL, formatClock, roomLeftSeconds } from "@/lib/house";
 import { parseMenu, PARTS } from "@/lib/bodyMenu";
+import { parsePricing, floorFromPrice } from "@/lib/pricing";
 
 function watchingNow(raw?: string | null) {
   try {
@@ -47,6 +48,8 @@ export default async function GirlDashboard() {
   const active = rows.filter((o) => ["accepted", "serving"].includes(o.status));
   const menu = parseMenu(profile?.bodyMenu);
   const selling = PARTS.filter((p) => menu[p.key]?.enabled).map((p) => p.label);
+  const pricing = parsePricing(menu);
+  const priceFrom = floorFromPrice(pricing, menu);
 
   const statusMap: Record<string, string> = { idle: "在柜上", busy: "房里有人", off: "已下钟" };
 
@@ -71,6 +74,10 @@ export default async function GirlDashboard() {
           </div>
           <StatusSwitcher current={profile?.status || "off"} />
           <p className="text-xs text-[#8b8793] mt-3">今晚卖：{selling.length ? selling.join("、") : "还没摆货"}</p>
+          <p className="text-xs text-[#c9a87c] mt-1">
+            {priceFrom} 币起 · 基数 {pricing.base}
+            {pricing.overnightEnabled !== "off" ? " · 有包夜" : ""}
+          </p>
           <p className="text-xs text-[#c9a87c] mt-1">
               {watchingNow((profile as any)?.watchers)
                 ? `${watchingNow((profile as any)?.watchers)} 人正在看你`
@@ -131,6 +138,8 @@ export default async function GirlDashboard() {
 
         <div className="pt-4 border-t border-[#1c1c22] flex flex-wrap gap-4 text-xs text-[#8b8793]">
           <Link href="/body" className="hover:text-[#c9a87c]">摆货</Link>
+          <Link href="/heat" className="hover:text-[#c9a87c]">发情档</Link>
+          <Link href="/pricing" className="hover:text-[#c9a87c]">标价</Link>
           <Link href="/clock-in" className="hover:text-[#c9a87c]">上钟</Link>
           <Link href="/clock-out" className="hover:text-[#c9a87c]">下钟</Link>
           <Link href="/live" className="hover:text-[#c9a87c]">等候室</Link>

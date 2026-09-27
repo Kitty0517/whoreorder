@@ -21,6 +21,7 @@ export default async function FloorPage() {
       bodyMenu: girlProfiles.bodyMenu,
       tonightOpening: girlProfiles.tonightOpening,
       viewCount: girlProfiles.viewCount,
+      heatOn: girlProfiles.heatOn,
       watchers: girlProfiles.watchers,
     })
     .from(girlProfiles)
@@ -81,7 +82,7 @@ export default async function FloorPage() {
                     <div>
                       <p className="text-[#e6e4e0] font-medium">{g.displayName}</p>
                       <p className="text-xs text-[#8b8793] mt-1">
-                        {inRoom ? "房里有人" : "空着可叫"} · {floorFromPrice(parsePricing(parseMenu(g.bodyMenu)), parseMenu(g.bodyMenu))} 币起 · {watchingNow(g.watchers) ? watchingNow(g.watchers) + " 人正在看" : (g.viewCount || 0) + " 人翻过"}
+                        {inRoom ? "房里有人" : g.heatOn ? "发情中 · 快用" : "空着可叫"} · {floorFromPrice(parsePricing(parseMenu(g.bodyMenu)), parseMenu(g.bodyMenu))} 币起 · {watchingNow(g.watchers) ? watchingNow(g.watchers) + " 人正在看" : (g.viewCount || 0) + " 人翻过"}
                       </p>
                       <p className="text-sm text-[#c9a87c] mt-2">
                         卖：{selling.length ? selling.join("、") : "还没摆货"}

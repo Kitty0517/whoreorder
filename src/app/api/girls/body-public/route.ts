@@ -4,6 +4,7 @@ import { girlProfiles } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { parseMenu, openParts, PARTS, getSpecial, PLAY_TAGS, SPECIAL_KINKS } from "@/lib/bodyMenu";
 import { parsePricing, floorFromPrice, partDepthPrice } from "@/lib/pricing";
+import { parseHeat } from "@/lib/heat";
 
 export async function GET(req: NextRequest) {
   const girlId = req.nextUrl.searchParams.get("girlId");
@@ -41,5 +42,7 @@ export async function GET(req: NextRequest) {
     playTagCatalog: PLAY_TAGS,
     pricing,
     floorFrom: floorFromPrice(pricing, menu),
+    heatOn: !!profile?.heatOn,
+    heat: profile?.heatOn ? parseHeat(profile.heatConfig) : null,
   });
 }

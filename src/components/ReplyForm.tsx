@@ -20,6 +20,8 @@ export function ReplyForm(props: {
   roomEndsAt?: number | Date | null;
   playTags?: string[];
   specialTags?: string[];
+  heatOn?: boolean;
+  allowSelfUpgrade?: boolean;
 }) {
   const router = useRouter();
   const unlocked = props.unlockedDepth || "look";

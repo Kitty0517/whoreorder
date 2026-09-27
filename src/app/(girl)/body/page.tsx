@@ -42,6 +42,13 @@ export default function BodyArchivePage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ menu: { ...menu, _special: special, _pricing: pricing } }),
     });
+    if (res.ok) {
+      await fetch("/api/girls/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ price: pricing.base }),
+      });
+    }
     const data = await res.json();
     setLoading(false);
     if (!res.ok) {
