@@ -62,6 +62,11 @@ export const TAG_ADD_FACTOR: Record<string, number> = {
   play_pony: 0.25,
   play_pig: 0.3,
   play_livestock: 0.25,
+  rimming: 0.25,
+  footjob: 0.15,
+  used_by_feet: 0.2,
+  ass_mouth: 0.25,
+  filth_service: 0.3,
 };
 
 export function parsePricing(menu: Record<string, any> | null | undefined): PricingConfig {

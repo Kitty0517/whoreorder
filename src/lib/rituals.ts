@@ -82,6 +82,32 @@ export const PLAY_RITUALS: Record<string, Ritual> = {
     placeholder: "用完展示：打开、给看、报状态。",
     hint: "收场要展示。",
   },
+  rimming: {
+    placeholder: "写口与后庭：靠近、气味、舔、反应。重口如实写。",
+    hint: "舔后庭。少绕弯。",
+    openingNeed: /舔|后|眼|肛|缝/,
+    openingNeedText: "舔后庭：开场沾到口与后庭。",
+  },
+  footjob: {
+    placeholder: "用脚侍奉：趾、心、夹、节奏。",
+    hint: "足交·你在用脚。",
+    openingNeed: /脚|足|趾/,
+    openingNeedText: "足交：写出脚在做什么。",
+  },
+  used_by_feet: {
+    placeholder: "被脚使用：踩、蹭、踩在脸上或身上。你是被踩的那方。",
+    hint: "被脚使用。",
+    openingNeed: /踩|脚|踏/,
+    openingNeedText: "被脚用：写出被踩/被蹭。",
+  },
+  ass_mouth: {
+    placeholder: "嘴与后庭的关系：清理感、侍奉、服从。",
+    hint: "嘴侍后庭相关。",
+  },
+  filth_service: {
+    placeholder: "重口侍奉：更脏、更短句、少解释。",
+    hint: "重口总项。按她已开的处写。",
+  },
 };
 
 export const SPECIAL_RITUALS: Record<string, Ritual> = {

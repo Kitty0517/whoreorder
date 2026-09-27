@@ -139,6 +139,7 @@ export default async function GirlDashboard() {
         <div className="pt-4 border-t border-[#1c1c22] flex flex-wrap gap-4 text-xs text-[#8b8793]">
           <Link href="/body" className="hover:text-[#c9a87c]">摆货</Link>
           <Link href="/heat" className="hover:text-[#c9a87c]">发情档</Link>
+          <Link href="/sisters" className="hover:text-[#c9a87c]">姐妹柜后</Link>
           <Link href="/pricing" className="hover:text-[#c9a87c]">标价</Link>
           <Link href="/clock-in" className="hover:text-[#c9a87c]">上钟</Link>
           <Link href="/clock-out" className="hover:text-[#c9a87c]">下钟</Link>

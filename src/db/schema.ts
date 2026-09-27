@@ -130,3 +130,19 @@ export const plazaPosts = sqliteTable("plaza_posts", {
 });
 
 // bodyMenu JSON lives on girl_profiles.body_menu after migration
+
+export const sisterPosts = sqliteTable("sister_posts", {
+  id: text("id").primaryKey(),
+  girlId: text("girl_id").notNull().references(() => users.id),
+  content: text("content").notNull(),
+  mood: text("mood").notNull().default(""),
+  createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(unixepoch())`).notNull(),
+});
+
+export const sisterReplies = sqliteTable("sister_replies", {
+  id: text("id").primaryKey(),
+  postId: text("post_id").notNull().references(() => sisterPosts.id),
+  girlId: text("girl_id").notNull().references(() => users.id),
+  content: text("content").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(unixepoch())`).notNull(),
+});

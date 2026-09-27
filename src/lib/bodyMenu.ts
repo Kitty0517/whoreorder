@@ -80,6 +80,11 @@ export const PLAY_TAGS = [
   { key: "objectify", label: "物化称呼" },
   { key: "kneel", label: "跪着完成" },
   { key: "show_after", label: "用后展示" },
+  { key: "rimming", label: "舔后庭" },
+  { key: "footjob", label: "足交·侍脚" },
+  { key: "used_by_feet", label: "被脚使用" },
+  { key: "ass_mouth", label: "嘴侍后庭相关" },
+  { key: "filth_service", label: "重口侍奉" },
 ] as const;
 
 /**
