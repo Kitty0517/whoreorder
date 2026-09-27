@@ -6,11 +6,12 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import { parseMenu } from "@/lib/bodyMenu";
 import { prevDepth } from "@/lib/house";
+import { calculateQuote, parsePricing, markupStepPrice } from "@/lib/pricing";
 
 export async function POST(req: NextRequest) {
   try {
     const user = await requireUser("client");
-    const { girlId, fantasyType, tone, fantasyDetail, scene, bodyAnchor, contract, part, depth, partName, minutes, playTags, specialTags } = await req.json();
+    const { girlId, fantasyType, tone, fantasyDetail, scene, bodyAnchor, contract, part, depth, partName, minutes, playTags, specialTags, multiSeats, packageType } = await req.json();
 
     if (!girlId || !part || !depth) {
       return NextResponse.json({ error: "先指人、指处、指档" }, { status: 400 });
@@ -44,27 +45,48 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "这档她不卖" }, { status: 400 });
     }
 
-    const price = profile.price || 200;
+    const pricing = parsePricing(menu);
     const roomMinutes = [20, 40, 60].includes(Number(minutes)) ? Number(minutes) : 20;
-    const total = price + (roomMinutes === 40 ? 50 : roomMinutes === 60 ? 100 : 0);
+    const seats = Math.min(3, Math.max(1, Number(multiSeats) || 1));
+    if (seats > 1 && !menu._special?.multi) {
+      return NextResponse.json({ error: "她没开多人" }, { status: 400 });
+    }
+    const pkg = packageType === "light" || packageType === "std" || packageType === "full" ? packageType : "none";
+    if (pkg !== "none") {
+      const allow = pricing.overnightEnabled;
+      const ok =
+        (pkg === "light" && ["light", "std", "full"].includes(allow)) ||
+        (pkg === "std" && ["std", "full"].includes(allow)) ||
+        (pkg === "full" && allow === "full");
+      if (!ok) return NextResponse.json({ error: "她没开这档包夜" }, { status: 400 });
+    }
+    const quote = calculateQuote(pricing, {
+      part,
+      depth,
+      minutes: roomMinutes,
+      playTags: Array.isArray(playTags) ? playTags : [],
+      specialTags: Array.isArray(specialTags) ? specialTags : [],
+      multiSeats: seats,
+      packageType: pkg,
+    });
+    const total = quote.total;
 
     if (user.coins < total) {
-      return NextResponse.json({ error: `币不够，这钟要 ${total}` }, { status: 400 });
+      return NextResponse.json({ error: `币不够，这单要 ${total}` }, { status: 400 });
     }
 
-    // 叫号：今日序号粗略用 totalOrders+1
     const callNo = (profile.totalOrders || 0) + 1;
     const unlockedDepth = choice === "markup" ? prevDepth(depth) : depth;
     const extraStatus = choice === "markup" ? "pending" : "none";
     const extraDemand = choice === "markup" ? `要开到「${depth}」这一档` : "";
-    const extraPay = choice === "markup" ? Math.max(50, Math.floor(price / 2)) : 0;
+    const extraPay = choice === "markup" ? markupStepPrice(pricing.base, unlockedDepth, depth) : 0;
 
     await db.update(users).set({ coins: user.coins - total }).where(eq(users.id, user.id));
     await db.insert(walletTxns).values({
       id: uuidv4(),
       userId: user.id,
       amount: -total,
-      reason: `叫人开房 ${roomMinutes} 分钟`,
+      reason: `叫人 ${pkg !== "none" ? "包夜" : roomMinutes + "分钟"} · ${total}币`,
     });
     const [girlUser] = await db.select().from(users).where(eq(users.id, girlId)).limit(1);
     if (girlUser) {

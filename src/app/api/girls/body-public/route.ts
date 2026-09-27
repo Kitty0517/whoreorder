@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { girlProfiles } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { parseMenu, openParts, PARTS, getSpecial, PLAY_TAGS, SPECIAL_KINKS } from "@/lib/bodyMenu";
+import { parsePricing, floorFromPrice, partDepthPrice } from "@/lib/pricing";
 
 export async function GET(req: NextRequest) {
   const girlId = req.nextUrl.searchParams.get("girlId");
@@ -21,11 +22,24 @@ export async function GET(req: NextRequest) {
     label: k.label,
     hint: k.hint,
   }));
+  const pricing = parsePricing(menu);
+  const openWithPrice = open.map((p) => ({
+    ...p,
+    priceFrom: partDepthPrice(pricing.base, p.key, "look"),
+    prices: {
+      look: partDepthPrice(pricing.base, p.key, "look"),
+      use: partDepthPrice(pricing.base, p.key, "use"),
+      enter: partDepthPrice(pricing.base, p.key, "enter"),
+      dirty: partDepthPrice(pricing.base, p.key, "dirty"),
+    },
+  }));
   return NextResponse.json({
-    open,
+    open: openWithPrice,
     menu,
     special,
     specialOpen,
     playTagCatalog: PLAY_TAGS,
+    pricing,
+    floorFrom: floorFromPrice(pricing, menu),
   });
 }

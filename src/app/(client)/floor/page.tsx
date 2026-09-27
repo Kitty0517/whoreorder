@@ -5,6 +5,7 @@ import { eq, inArray } from "drizzle-orm";
 import Link from "next/link";
 import { LogoutButton } from "@/components/LogoutButton";
 import { parseMenu, PARTS } from "@/lib/bodyMenu";
+import { parsePricing, floorFromPrice } from "@/lib/pricing";
 import { FloorWatch } from "@/components/FloorWatch";
 
 export default async function FloorPage() {
@@ -80,7 +81,7 @@ export default async function FloorPage() {
                     <div>
                       <p className="text-[#e6e4e0] font-medium">{g.displayName}</p>
                       <p className="text-xs text-[#8b8793] mt-1">
-                        {inRoom ? "房里有人" : "空着可叫"} · {g.price} 币起 · {watchingNow(g.watchers) ? watchingNow(g.watchers) + " 人正在看" : (g.viewCount || 0) + " 人翻过"}
+                        {inRoom ? "房里有人" : "空着可叫"} · {floorFromPrice(parsePricing(parseMenu(g.bodyMenu)), parseMenu(g.bodyMenu))} 币起 · {watchingNow(g.watchers) ? watchingNow(g.watchers) + " 人正在看" : (g.viewCount || 0) + " 人翻过"}
                       </p>
                       <p className="text-sm text-[#c9a87c] mt-2">
                         卖：{selling.length ? selling.join("、") : "还没摆货"}

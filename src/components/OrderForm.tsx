@@ -1,18 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { playTagLabel, specialLabel } from "@/lib/bodyMenu";
+import { calculateQuote, DEFAULT_PRICING, type PricingConfig } from "@/lib/pricing";
 
 export function OrderForm({ girlId }: { girlId: string }) {
   const router = useRouter();
   const [open, setOpen] = useState<any[]>([]);
   const [specialOpen, setSpecialOpen] = useState<any[]>([]);
+  const [pricing, setPricing] = useState<PricingConfig>(DEFAULT_PRICING);
   const [part, setPart] = useState("");
   const [depth, setDepth] = useState("");
   const [partName, setPartName] = useState("");
   const [playTags, setPlayTags] = useState<string[]>([]);
   const [specialTags, setSpecialTags] = useState<string[]>([]);
+  const [multiSeats, setMultiSeats] = useState(1);
+  const [packageType, setPackageType] = useState<"none" | "light" | "std" | "full">("none");
   const [detail, setDetail] = useState("");
   const [scene, setScene] = useState("雨夜酒店");
   const [minutes, setMinutes] = useState(20);
@@ -26,6 +30,7 @@ export function OrderForm({ girlId }: { girlId: string }) {
         const list = d.open || [];
         setOpen(list);
         setSpecialOpen(d.specialOpen || []);
+        if (d.pricing) setPricing(d.pricing);
         if (list[0]) setPart(list[0].key);
       });
   }, [girlId]);
@@ -37,6 +42,20 @@ export function OrderForm({ girlId }: { girlId: string }) {
   });
   const names = [...(current?.namesFree || []), ...(current?.namesPaid || [])];
   const availableTags = current?.playTags || [];
+  const multiAllowed = specialOpen.some((k) => k.key === "multi");
+
+  const quote = useMemo(() => {
+    if (!part || (!depth && packageType === "none")) return null;
+    return calculateQuote(pricing, {
+      part: part || "pussy",
+      depth: depth || "use",
+      minutes,
+      playTags,
+      specialTags,
+      multiSeats: multiAllowed ? multiSeats : 1,
+      packageType,
+    });
+  }, [pricing, part, depth, minutes, playTags, specialTags, multiSeats, packageType, multiAllowed]);
 
   function togglePlay(tag: string) {
     setPlayTags((prev) => {
@@ -47,9 +66,7 @@ export function OrderForm({ girlId }: { girlId: string }) {
   }
 
   function toggleSpecial(tag: string) {
-    setSpecialTags((prev) =>
-      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
-    );
+    setSpecialTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
   }
 
   async function submit(e: React.FormEvent) {
@@ -58,7 +75,7 @@ export function OrderForm({ girlId }: { girlId: string }) {
       setError("她今晚还没把货摆出来。");
       return;
     }
-    if (!depth) {
+    if (packageType === "none" && !depth) {
       setError("先选做到哪一层。");
       return;
     }
@@ -78,11 +95,13 @@ export function OrderForm({ girlId }: { girlId: string }) {
         fantasyDetail: detail,
         scene,
         part,
-        depth,
+        depth: depth || "use",
         partName,
         playTags,
         specialTags,
         minutes,
+        multiSeats: multiAllowed ? multiSeats : 1,
+        packageType,
         bodyAnchor: current?.label || part,
         contract: current?.depths?.[depth] === "markup" ? "markup" : "obey",
       }),
@@ -102,6 +121,28 @@ export function OrderForm({ girlId }: { girlId: string }) {
 
   return (
     <form onSubmit={submit} className="space-y-4">
+      {pricing.overnightEnabled !== "off" && (
+        <div>
+          <label className="block text-xs text-[#8b8793] mb-1.5">包夜</label>
+          <select
+            value={packageType}
+            onChange={(e) => setPackageType(e.target.value as any)}
+            className="w-full bg-[#0a0a0c] border border-[#1c1c22] rounded-md px-3 py-2.5 text-sm"
+          >
+            <option value="none">不包夜 · 按钟点</option>
+            {(pricing.overnightEnabled === "light" || pricing.overnightEnabled === "std" || pricing.overnightEnabled === "full") && (
+              <option value="light">轻包夜 · {pricing.overnightLight} 币</option>
+            )}
+            {(pricing.overnightEnabled === "std" || pricing.overnightEnabled === "full") && (
+              <option value="std">标准包夜 · {pricing.overnightStd} 币</option>
+            )}
+            {pricing.overnightEnabled === "full" && (
+              <option value="full">无下限包夜 · {pricing.overnightFull} 币</option>
+            )}
+          </select>
+        </div>
+      )}
+
       <div>
         <label className="block text-xs text-[#8b8793] mb-1.5">先买哪一处</label>
         <select
@@ -116,27 +157,33 @@ export function OrderForm({ girlId }: { girlId: string }) {
         >
           {open.map((p) => (
             <option key={p.key} value={p.key}>
-              {p.label} · 耐看{p.scoreLook} 好用{p.scoreUse}
+              {p.label}
+              {p.prices ? ` · 口/手 ${p.prices.use} 起` : ""}
             </option>
           ))}
         </select>
       </div>
-      <div>
-        <label className="block text-xs text-[#8b8793] mb-1.5">做到哪一层</label>
-        <select
-          value={depth}
-          onChange={(e) => setDepth(e.target.value)}
-          className="w-full bg-[#0a0a0c] border border-[#1c1c22] rounded-md px-3 py-2.5 text-sm"
-        >
-          <option value="">选一层</option>
-          {depthOptions.map((d: any) => (
-            <option key={d.key} value={d.key}>
-              {d.label}
-              {current?.depths?.[d.key] === "markup" ? "（加码）" : ""}
-            </option>
-          ))}
-        </select>
-      </div>
+
+      {packageType === "none" && (
+        <div>
+          <label className="block text-xs text-[#8b8793] mb-1.5">做到哪一层</label>
+          <select
+            value={depth}
+            onChange={(e) => setDepth(e.target.value)}
+            className="w-full bg-[#0a0a0c] border border-[#1c1c22] rounded-md px-3 py-2.5 text-sm"
+          >
+            <option value="">选一层</option>
+            {depthOptions.map((d: any) => (
+              <option key={d.key} value={d.key}>
+                {d.label}
+                {current?.prices?.[d.key] ? ` · ${current.prices[d.key]} 币` : ""}
+                {current?.depths?.[d.key] === "markup" ? "（加码）" : ""}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
       {names.length > 0 && (
         <div>
           <label className="block text-xs text-[#8b8793] mb-1.5">你怎么叫这里</label>
@@ -152,6 +199,7 @@ export function OrderForm({ girlId }: { girlId: string }) {
           </select>
         </div>
       )}
+
       {availableTags.length > 0 && (
         <div>
           <label className="block text-xs text-[#8b8793] mb-1.5">玩法（最多 3 个）</label>
@@ -162,9 +210,7 @@ export function OrderForm({ girlId }: { girlId: string }) {
                 type="button"
                 onClick={() => togglePlay(tag)}
                 className={`text-xs px-2 py-1 rounded border ${
-                  playTags.includes(tag)
-                    ? "border-[#c9a87c] text-[#c9a87c]"
-                    : "border-[#2a2a32] text-[#5a5860]"
+                  playTags.includes(tag) ? "border-[#c9a87c] text-[#c9a87c]" : "border-[#2a2a32] text-[#5a5860]"
                 }`}
               >
                 {playTagLabel(tag)}
@@ -173,9 +219,10 @@ export function OrderForm({ girlId }: { girlId: string }) {
           </div>
         </div>
       )}
+
       {specialOpen.length > 0 && (
         <div>
-          <label className="block text-xs text-[#8b8793] mb-1.5">她开了的特殊癖好</label>
+          <label className="block text-xs text-[#8b8793] mb-1.5">特殊癖好</label>
           <div className="flex flex-wrap gap-2">
             {specialOpen.map((k) => (
               <button
@@ -183,30 +230,46 @@ export function OrderForm({ girlId }: { girlId: string }) {
                 type="button"
                 onClick={() => toggleSpecial(k.key)}
                 className={`text-xs px-2 py-1 rounded border ${
-                  specialTags.includes(k.key)
-                    ? "border-[#c9a87c] text-[#c9a87c]"
-                    : "border-[#2a2a32] text-[#5a5860]"
+                  specialTags.includes(k.key) ? "border-[#c9a87c] text-[#c9a87c]" : "border-[#2a2a32] text-[#5a5860]"
                 }`}
               >
                 {k.label}
               </button>
             ))}
           </div>
-          <p className="text-[11px] text-[#5a5860] mt-1">非人/猪马狗拟畜均为文字人设，不是真实动物。</p>
         </div>
       )}
-      <div>
-        <label className="block text-xs text-[#8b8793] mb-1.5">这钟多久</label>
-        <select
-          value={minutes}
-          onChange={(e) => setMinutes(Number(e.target.value))}
-          className="w-full bg-[#0a0a0c] border border-[#1c1c22] rounded-md px-3 py-2.5 text-sm"
-        >
-          <option value={20}>20 分钟</option>
-          <option value={40}>40 分钟（+50币）</option>
-          <option value={60}>60 分钟（+100币）</option>
-        </select>
-      </div>
+
+      {multiAllowed && (
+        <div>
+          <label className="block text-xs text-[#8b8793] mb-1.5">多人位数（含你）</label>
+          <select
+            value={multiSeats}
+            onChange={(e) => setMultiSeats(Number(e.target.value))}
+            className="w-full bg-[#0a0a0c] border border-[#1c1c22] rounded-md px-3 py-2.5 text-sm"
+          >
+            <option value={1}>就你一个</option>
+            <option value={2}>双人 · +{pricing.multiPerSeat}</option>
+            <option value={3}>三人 · +{pricing.multiPerSeat * 2}</option>
+          </select>
+        </div>
+      )}
+
+      {packageType === "none" && (
+        <div>
+          <label className="block text-xs text-[#8b8793] mb-1.5">这钟多久</label>
+          <select
+            value={minutes}
+            onChange={(e) => setMinutes(Number(e.target.value))}
+            className="w-full bg-[#0a0a0c] border border-[#1c1c22] rounded-md px-3 py-2.5 text-sm"
+          >
+            <option value={20}>20 分钟</option>
+            <option value={40}>40 分钟</option>
+            <option value={60}>60 分钟</option>
+          </select>
+        </div>
+      )}
+
       <div>
         <label className="block text-xs text-[#8b8793] mb-1.5">放在哪</label>
         <select
@@ -222,6 +285,7 @@ export function OrderForm({ girlId }: { girlId: string }) {
           <option>非人巢穴（幻想）</option>
         </select>
       </div>
+
       <div>
         <label className="block text-xs text-[#8b8793] mb-1.5">进房第一句</label>
         <textarea
@@ -232,13 +296,25 @@ export function OrderForm({ girlId }: { girlId: string }) {
           className="w-full bg-[#0a0a0c] border border-[#1c1c22] rounded-md px-3 py-2.5 text-sm"
         />
       </div>
+
+      {quote && (
+        <div className="border border-[#c9a87c]/30 rounded-md px-4 py-3 space-y-1">
+          <p className="text-sm text-[#c9a87c]">本单 {quote.total} 币</p>
+          {quote.breakdown.map((b, i) => (
+            <p key={i} className="text-[11px] text-[#8b8793]">
+              {b.label} · {b.amount}
+            </p>
+          ))}
+        </div>
+      )}
+
       {error && <p className="text-[#a85c5c] text-sm">{error}</p>}
       <button
         type="submit"
         disabled={loading}
         className="w-full py-3 bg-[#c9a87c] text-[#070708] font-medium rounded-md disabled:opacity-50"
       >
-        {loading ? "在点…" : "叫她进房"}
+        {loading ? "在点…" : quote ? `支付 ${quote.total} 币 · 叫她进房` : "叫她进房"}
       </button>
     </form>
   );

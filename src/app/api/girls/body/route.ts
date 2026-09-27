@@ -13,6 +13,7 @@ import {
   scorePart,
   type PartState,
 } from "@/lib/bodyMenu";
+import { parsePricing, DEFAULT_PRICING } from "@/lib/pricing";
 
 export async function GET() {
   const user = await requireUser("girl");
@@ -23,6 +24,7 @@ export async function GET() {
     if (!Array.isArray(menu[p.key].playTags)) menu[p.key].playTags = [];
   }
   if (!menu._special) menu._special = emptySpecial();
+  if (!menu._pricing) menu._pricing = DEFAULT_PRICING;
   return NextResponse.json({ menu });
 }
 
@@ -59,6 +61,7 @@ export async function POST(req: NextRequest) {
     special[k.key] = !!specialIn[k.key];
   }
   next._special = special;
+  next._pricing = parsePricing({ _pricing: menu?._pricing });
 
   const enabled = PARTS.filter((p) => next[p.key].enabled).map((p) => p.key);
   if (enabled.length && !(enabled.includes("mouth") && (enabled.includes("breast") || enabled.includes("pussy")))) {

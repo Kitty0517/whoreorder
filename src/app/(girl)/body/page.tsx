@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PARTS, PLAY_TAGS, SPECIAL_KINKS, emptyPart, emptySpecial, type PartState, type DepthChoice, type SpecialState } from "@/lib/bodyMenu";
+import { DEFAULT_PRICING, type PricingConfig, partDepthPrice } from "@/lib/pricing";
 
 export default function BodyArchivePage() {
   const router = useRouter();
   const [menu, setMenu] = useState<Record<string, any>>({});
   const [special, setSpecial] = useState<SpecialState>(emptySpecial());
+  const [pricing, setPricing] = useState<PricingConfig>(DEFAULT_PRICING);
   const [cur, setCur] = useState("mouth");
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
@@ -24,6 +26,7 @@ export default function BodyArchivePage() {
         }
         setMenu(m);
         setSpecial(m._special || emptySpecial());
+        setPricing(m._pricing || DEFAULT_PRICING);
       });
   }, []);
 
@@ -37,7 +40,7 @@ export default function BodyArchivePage() {
     const res = await fetch("/api/girls/body", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ menu: { ...menu, _special: special } }),
+      body: JSON.stringify({ menu: { ...menu, _special: special, _pricing: pricing } }),
     });
     const data = await res.json();
     setLoading(false);
@@ -224,6 +227,58 @@ export default function BodyArchivePage() {
         </div>
 
         
+
+        <section className="bg-[#111114] border border-[#1c1c22] rounded-xl p-5 space-y-4">
+          <h2 className="text-sm text-[#c9a87c]">今晚怎么卖钱</h2>
+          <p className="text-xs text-[#5a5860]">只调基数，各处各档按店规自动算。包夜和多人另开。</p>
+          <div>
+            <label className="text-xs text-[#8b8793]">基数 B（主货标准档的尺子）</label>
+            <input type="number" value={pricing.base} onChange={(e) => setPricing({ ...pricing, base: Number(e.target.value) || 200 })}
+              className="w-full mt-1 bg-[#0a0a0c] border border-[#1c1c22] rounded px-3 py-2 text-sm" />
+          </div>
+          <div className="text-xs text-[#8b8793] space-y-1">
+            {PARTS.map((p) => (
+              <p key={p.key}>
+                {p.label}：看 {partDepthPrice(pricing.base, p.key, "look")} · 口/手 {partDepthPrice(pricing.base, p.key, "use")} · 进 {partDepthPrice(pricing.base, p.key, "enter")} · 脏 {partDepthPrice(pricing.base, p.key, "dirty")}
+              </p>
+            ))}
+          </div>
+          <div>
+            <label className="text-xs text-[#8b8793]">包夜</label>
+            <select value={pricing.overnightEnabled} onChange={(e) => setPricing({ ...pricing, overnightEnabled: e.target.value as any })}
+              className="w-full mt-1 bg-[#0a0a0c] border border-[#1c1c22] rounded px-3 py-2 text-sm">
+              <option value="off">不包夜</option>
+              <option value="light">轻包夜</option>
+              <option value="std">标准包夜</option>
+              <option value="full">无下限包夜</option>
+            </select>
+          </div>
+          {pricing.overnightEnabled !== "off" && (
+            <div className="grid grid-cols-3 gap-2">
+              <div>
+                <label className="text-[10px] text-[#5a5860]">轻</label>
+                <input type="number" value={pricing.overnightLight} onChange={(e) => setPricing({ ...pricing, overnightLight: Number(e.target.value) || 0 })}
+                  className="w-full bg-[#0a0a0c] border border-[#1c1c22] rounded px-2 py-1.5 text-sm" />
+              </div>
+              <div>
+                <label className="text-[10px] text-[#5a5860]">标准</label>
+                <input type="number" value={pricing.overnightStd} onChange={(e) => setPricing({ ...pricing, overnightStd: Number(e.target.value) || 0 })}
+                  className="w-full bg-[#0a0a0c] border border-[#1c1c22] rounded px-2 py-1.5 text-sm" />
+              </div>
+              <div>
+                <label className="text-[10px] text-[#5a5860]">无下限</label>
+                <input type="number" value={pricing.overnightFull} onChange={(e) => setPricing({ ...pricing, overnightFull: Number(e.target.value) || 0 })}
+                  className="w-full bg-[#0a0a0c] border border-[#1c1c22] rounded px-2 py-1.5 text-sm" />
+              </div>
+            </div>
+          )}
+          <div>
+            <label className="text-xs text-[#8b8793]">多人每位加价（需开特殊癖好·多人）</label>
+            <input type="number" value={pricing.multiPerSeat} onChange={(e) => setPricing({ ...pricing, multiPerSeat: Number(e.target.value) || 0 })}
+              className="w-full mt-1 bg-[#0a0a0c] border border-[#1c1c22] rounded px-3 py-2 text-sm" />
+          </div>
+        </section>
+
         <section className="bg-[#111114] border border-[#1c1c22] rounded-xl p-5 space-y-3">
           <h2 className="text-sm text-[#c9a87c]">特殊癖好（整店，默认关）</h2>
           <p className="text-xs text-[#5a5860] leading-relaxed">
